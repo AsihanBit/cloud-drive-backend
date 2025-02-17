@@ -2,6 +2,7 @@ package com.netdisk.cloudserver.service;
 
 import com.netdisk.dto.UserLoginDTO;
 import com.netdisk.dto.UserRegisterDTO;
+import com.netdisk.entity.User;
 
 public interface UserService {
     /**
@@ -16,5 +17,5 @@ public interface UserService {
      *
      * @param userLoginDTO
      */
-    void userLogin(UserLoginDTO userLoginDTO);
+    User userLogin(UserLoginDTO userLoginDTO);
 }

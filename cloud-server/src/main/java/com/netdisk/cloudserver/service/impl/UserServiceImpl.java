@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
      * @param userLoginDTO
      */
     @Override
-    public void userLogin(UserLoginDTO userLoginDTO) {
+    public User userLogin(UserLoginDTO userLoginDTO) {
         User user = userMapper.queryUserByUsername(userLoginDTO.getUsername());
         if (user == null) {
             throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
@@ -71,5 +71,8 @@ public class UserServiceImpl implements UserService {
         if (!user.getPassword().equals(userLoginDTO.getPassword())) {
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
         }
+        user.setPassword(null);
+
+        return user;
     }
 }

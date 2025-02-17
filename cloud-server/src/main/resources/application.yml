@@ -12,10 +12,11 @@ spring:
     url: jdbc:mysql://localhost:3306/cloud_drive
     username: root
     password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 30MB
+      max-request-size: 30MB
 
 mybatis:
   #mapper配置文件
@@ -30,3 +31,9 @@ cloud-drive:
   disk:
     storage-path: E:\\cloudfile
     temp-dir: temp
+  jwt:
+    user-secret-key: cloudDriveSecurityTokenKeyLong32
+    # 7200000 2小时
+    user-ttl: 7200000
+    # Authentication
+    user-token-name: authorization

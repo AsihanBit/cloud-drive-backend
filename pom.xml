@@ -37,6 +37,7 @@
         <druid>1.2.24</druid>
         <lombok>1.18.36</lombok>
         <knife4j>3.0.3</knife4j>
+        <jjwt>0.12.6</jjwt>
     </properties>
 
     <dependencyManagement>
@@ -51,6 +52,7 @@
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.connector.j}</version>
             </dependency>
+            <!-- 数据库依赖 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
@@ -65,6 +67,11 @@
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-spring-boot-starter</artifactId>
                 <version>${knife4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jjwt}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
