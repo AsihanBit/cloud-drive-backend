@@ -1,0 +1,3 @@
+cloud-drive:
+  datasource:
+    driver-class-name: com.mysql
