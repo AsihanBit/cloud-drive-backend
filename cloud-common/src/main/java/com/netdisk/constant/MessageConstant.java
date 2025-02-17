@@ -33,6 +33,10 @@ public class MessageConstant {
     public static final String FAILED_TO_CREATE_SUB_DIR = "子目录创建失败";
     public static final String CHUNK_UPLOAD_SUCCESS = "文件分片上传成功";
     public static final String CHUNK_UPLOAD_FAILED = "文件分片上传失败";
+    public static final String FILE_IS_EXIST = "文件已存在, 执行秒传";
+    public static final String FILE_IS_NEW = "新文件需传输";
+    public static final String CHUNK_IS_EXIST = "分片已存在, 执行秒传";
+    public static final String CHUNK_IS_NEW = "新分片需传输";
 
     // 私有构造函数，防止实例化
     private MessageConstant() {

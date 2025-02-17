@@ -20,6 +20,6 @@ public class DiskConfiguration {
     @ConditionalOnMissingBean
     public FileChunkUtil fileMergeUtil(DiskProperties diskProperties) {
         log.info("开始创建分片上传工具类对象 {}", diskProperties);
-        return new FileChunkUtil(diskProperties.getStoragePath(), diskProperties.getTempDir());
+        return new FileChunkUtil(diskProperties.getStoragePath(), diskProperties.getFileDir(), diskProperties.getTempDir());
     }
 }

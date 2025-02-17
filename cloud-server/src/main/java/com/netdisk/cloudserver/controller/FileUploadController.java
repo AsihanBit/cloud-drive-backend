@@ -5,25 +5,26 @@ import com.netdisk.constant.MessageConstant;
 import com.netdisk.dto.ChunkUploadDTO;
 import com.netdisk.result.Result;
 import com.netdisk.utils.FileChunkUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+@Tag(name = "文件上传接口")
 @RestController
 @RequestMapping("/user/file")
 public class FileUploadController {
     private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
 
-    private FileChunkUtil fileMergeUtil;
+    private FileChunkUtil fileChunkUtil;
     private FileUploadService fileUploadService;
 
-    public FileUploadController(FileChunkUtil fileMergeUtil, FileUploadService fileUploadService) {
-        this.fileMergeUtil = fileMergeUtil;
+    public FileUploadController(FileChunkUtil fileChunkUtil, FileUploadService fileUploadService) {
+        this.fileChunkUtil = fileChunkUtil;
         this.fileUploadService = fileUploadService;
     }
 
@@ -37,6 +38,7 @@ public class FileUploadController {
         return Result.success(MessageConstant.FILE_UPLOAD_SUCCESS);
     }
 
+    @Operation(summary = "分片上传")
     @PostMapping("/chunkUpload")
     public Result chunkUploadFile(ChunkUploadDTO chunkUploadDTO) {
         log.info("整个文件哈希值: {}", chunkUploadDTO.getFileHash());
@@ -50,7 +52,7 @@ public class FileUploadController {
         log.info("分片: {} / {}", chunkUploadDTO.getChunkNumber(), chunkUploadDTO.getChunkCount());
 
 //        fileUploadService.uploadChunk(chunkUploadDTO);
-        fileMergeUtil.storeChunk(
+        fileChunkUtil.storeChunk(
                 chunkUploadDTO.getFile(),
                 chunkUploadDTO.getFileHash(),
                 chunkUploadDTO.getChunkNumber(),
@@ -60,16 +62,41 @@ public class FileUploadController {
     }
 
     // 合并分片 测试
+    @Operation(summary = "合并分片")
     @PostMapping("/mergeTest")
     public Result mergeTest() throws IOException {
         log.info("合并分片测试:");
-        fileMergeUtil.mergeChunks("f3b59b33ae0a914774649e705ce75450"); // 压缩包
+        fileChunkUtil.mergeChunks("f3b59b33ae0a914774649e705ce75450"); // 压缩包
 //        fileMergeUtil.mergeChunks("9bde7af29034ed1b0c7bf1730fb3e2b9"); // 视频
 //        fileMergeUtil.mergeChunks("a0aacc576a4a4f03007b3d12bd5f30d0"); // steam冬促图片
-//        fileMergeUtil.mergeChunks("4e9c7f46c0cc45912a25d58c01e02235"); // butter图片
+//        fileChunkUtil.mergeChunks("4e9c7f46c0cc45912a25d58c01e02235"); // butter图片
 //        fileMergeUtil.mergeChunks("1721076083742c27273c458476d5e3a0"); // 一个txt
 
         return Result.success();
+    }
+
+    @Operation(summary = "文件存在性判断")
+    @GetMapping("/fileIsExist")
+    public Result fileIsExist(@RequestParam String fileHash) {
+        boolean isExist = fileChunkUtil.checkFileExists(fileHash);
+        if (isExist) {
+            log.info("文件已存在");
+        } else {
+            log.info("文件是新文件");
+        }
+        return Result.success(isExist);
+    }
+
+    @Operation(summary = "分片存在性判断")
+    @GetMapping("/chunkIsExist")
+    public Result chunkIsExist(@RequestParam String fileHash, @RequestParam String chunkHash, @RequestParam Integer chunkNumber) {
+        boolean isExist = fileChunkUtil.checkChunkExists(fileHash, chunkHash, chunkNumber);
+        if (isExist) {
+            log.info("分片已存在");
+        } else {
+            log.info("分片是新文件");
+        }
+        return Result.success(isExist);
     }
 }
 

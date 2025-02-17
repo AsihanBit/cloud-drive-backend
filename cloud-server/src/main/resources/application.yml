@@ -6,7 +6,6 @@ spring:
     name: cloud-server
   profiles:
     active: dev
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/cloud_drive
@@ -17,6 +16,23 @@ spring:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
+
+#knife4j:
+#  enable: false
+#  setting:
+#    language: zh_cn
+## springdoc-openapi项目配置
+#springdoc:
+#  swagger-ui:
+#    path: /swagger-ui.html
+#    tags-sorter: alpha
+#    operations-sorter: alpha
+#  api-docs:
+#    path: /v3/api-docs
+#  group-configs:
+#    group: 'default'
+#    paths-to-match: '/**'
+#    packages-to-scan: com.xiaominfo.knife4j.demo.web
 
 mybatis:
   #mapper配置文件
@@ -30,10 +46,11 @@ mybatis:
 cloud-drive:
   disk:
     storage-path: E:\\cloudfile
+    file-dir: file
     temp-dir: temp
   jwt:
     user-secret-key: cloudDriveSecurityTokenKeyLong32
     # 7200000 2小时
-    user-ttl: 7200000
+    user-ttl: 72000000
     # Authentication
     user-token-name: authorization

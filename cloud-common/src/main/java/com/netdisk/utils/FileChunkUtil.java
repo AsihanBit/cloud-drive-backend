@@ -22,7 +22,85 @@ import java.util.stream.Collectors;
 public class FileChunkUtil {
 
     private String storagePath;
+    private String fileDir;
     private String tempDir;
+
+    /**
+     * 分片保存时:  storagePath/tempDir/ 整文件md5 / part_1_分片md5
+     * 检查存在时:  先拿到 [getChunkDirPath] storagePath/tempDir/整文件md5   再取 _ [2]
+     *
+     */
+
+    /**
+     * 根据传入的 MD5 值生成完整的文件路径
+     *
+     * @param fileHash MD5 值
+     * @return 完整的文件路径
+     */
+    public Path getFileCompletePath(String fileHash) {
+        if (fileHash == null || fileHash.length() < 2) {
+            throw new IllegalArgumentException("传入的 MD5 值无效，长度至少为 2");
+        }
+        // 提取 MD5 值的前两位
+        String firstTwoChars = fileHash.substring(0, 2);
+
+        // 构建包含 MD5 前两位子目录的完整路径
+        return Paths.get(storagePath, fileDir, firstTwoChars, fileHash);
+//        return Paths.get(storagePath, firstTwoChars);
+    }
+
+    public Path getFileDirPath(String fileHash) {
+        if (fileHash == null || fileHash.length() < 2) {
+            throw new IllegalArgumentException("传入的 MD5 值无效，长度至少为 2");
+        }
+        // 提取 MD5 值的前两位
+        String firstTwoChars = fileHash.substring(0, 2);
+
+        // 构建包含 MD5 前两位子目录的完整路径
+        return Paths.get(storagePath, fileDir, firstTwoChars);
+//        return Paths.get(storagePath, firstTwoChars);
+    }
+
+    public Path getChunkDirPath(String fileHash) {
+        if (fileHash == null || fileHash.length() < 2) {
+            throw new IllegalArgumentException("传入的 MD5 值无效，长度至少为 2");
+        }
+        // 构建分片路径：storagePath\tempDir\完整文件md5
+        return Paths.get(storagePath, tempDir, fileHash);
+    }
+
+    public Path getChunkCompletePath(String fileHash, String chunkHash, Integer chunkNumber) {
+        if (fileHash == null || fileHash.length() < 2) {
+            throw new IllegalArgumentException("传入的 MD5 值无效，长度至少为 2");
+        }
+        if (chunkNumber == null) {
+            throw new IllegalArgumentException("分片编号不能为空");
+        }
+
+
+        // 构建分片路径：storagePath\tempDir\完整文件md5
+//        return Paths.get(storagePath, tempDir, fileHash, chunkHash);
+        // 构建分片路径和文件名：storagePath/tempDir/fileHash/part_chunkNumber_chunkHash
+        return Paths.get(storagePath, tempDir, fileHash, "part_" + chunkNumber + "_" + chunkHash);
+    }
+
+    /**
+     * 分片存在性检查
+     */
+    public boolean checkChunkExists(String fileHash, String chunkHash, Integer chunkNumber) {
+        Path chunkPath = getChunkCompletePath(fileHash, chunkHash, chunkNumber);
+        // 检查分片文件是否存在
+        return Files.exists(chunkPath);
+    }
+
+    /**
+     * 文件存在性检查
+     */
+    public boolean checkFileExists(String md5) {
+        Path filePath = getFileCompletePath(md5);
+        // 检查文件是否存在
+        return Files.exists(filePath);
+    }
 
 
     /**
@@ -30,37 +108,34 @@ public class FileChunkUtil {
      *
      * @param file        分片文件
      * @param chunkNumber 分片编号
-     * @param subDir      临时目录
      * @throws IOException 如果存储过程中发生 I/O 错误
      */
-    public void storeChunk(MultipartFile file, String fileHash, int chunkNumber, String chunkHash, Path subDir) {
+    public void storeChunk(MultipartFile file, String fileHash, int chunkNumber, String chunkHash) {
         if (file == null || chunkHash == null || chunkHash.length() < 2) {
             throw new FileChunkException(MessageConstant.INVALID_INPUT_PARAMETERS);
         }
 
-        // 创建存储目录路径和临时目录路径
-        Path storageDir = Paths.get(storagePath); // E:/cloudfile
-        Path defaultTempDir = Paths.get(tempDir); // E:/cloudfile/temp
-
-        // 创建完整的存储路径 重载方法传入哈希值
-        Path completeTempDir = storageDir.resolve(defaultTempDir).resolve(subDir);
-
+        // 创建临时文件存储目录路径
+        // TODO 以后在单独分出来 在新文件判断里执行
+        Path chunkPath = getChunkDirPath(fileHash);
         try {
             // 检查并创建目录（包括所有必要的父目录）
-            if (!Files.exists(completeTempDir)) {
-                Files.createDirectories(completeTempDir);
-                System.out.println("目录创建成功: " + completeTempDir.toString());
+            if (!Files.exists(chunkPath)) {
+                Files.createDirectories(chunkPath);
+                System.out.println("目录创建成功: " + chunkPath.toString());
             } else {
-                System.out.println("目录已存在: " + completeTempDir.toString());
+                System.out.println("目录已存在: " + chunkPath.toString());
             }
-
         } catch (Exception e) {
             throw new FileChunkException(MessageConstant.FAILED_TO_CREATE_SUB_DIR);
         }
 
-        // 构建分片文件路径，名称为 "md5值+chunkNumber"
-        Path chunkFilePath = completeTempDir.resolve(fileHash + "_part" + chunkNumber + "_" + chunkHash);
-        // String.format("%05d", chunkNumber)
+        // 构建分片文件路径，名称为 "整个文件md5_part1_分片md5"
+//        Path chunkFilePath = chunkPath.resolve(fileHash + "_part" + chunkNumber + "_" + chunkHash);
+//        Path chunkFilePath = chunkPath.resolve("part_" + chunkNumber + "_" + chunkHash);
+        Path chunkFilePath = getChunkCompletePath(fileHash, chunkHash, chunkNumber);
+
+//        Path chunkFilePath = chunkPath.resolve(chunkHash);
 
         // 存储分片到指定路径
         try {
@@ -68,24 +143,6 @@ public class FileChunkUtil {
         } catch (IOException e) {
             throw new FileChunkException(MessageConstant.FAILED_TO_STORE_CHUNK);
         }
-
-    }
-
-    // 不带有 tempDir 参数的方法, 使用默认的临时目录
-    public void storeChunk(MultipartFile file, String fileHash, int chunkNumber, String chunkHash) {
-        if (file == null || chunkHash == null || chunkHash.length() < 2) {
-            throw new FileChunkException(MessageConstant.INVALID_INPUT_PARAMETERS);
-        }
-
-        // 使用哈希值作为子目录名
-//        String hashPrefix = hash.substring(0, 2);
-//        String hashPrefix = fileHash;
-        Path subDirectory = Paths.get(fileHash);
-//        Path temp = Paths.get(tempDir);
-//        Path completeTempDir = temp.resolve(subDirectory);
-
-        // 存储文件块
-        storeChunk(file, fileHash, chunkNumber, chunkHash, subDirectory);
 
     }
 
@@ -100,16 +157,30 @@ public class FileChunkUtil {
         // 获取临时目录下对应文件的所有分片
         Path completeTempDir = Paths.get(storagePath).resolve(tempDir).resolve(fileHash);
         List<Path> chunkFiles = Files.list(completeTempDir)
-//                .filter(path -> path.toString().startsWith(fileHash))
-                .filter(path -> path.getFileName().toString().matches(fileHash + "_part\\d+_.*"))
+                .filter(path -> path.getFileName().toString().startsWith("part_"))
+//                .filter(path -> path.getFileName().toString().matches(fileHash + "_part\\d+_.*"))
+//                .filter(path -> path.getFileName().toString().matches("part_(\\d+)_.*"))
                 .sorted(createCustomComparator()) // 确保按正确的顺序合并
                 .collect(Collectors.toList());
 
         // 目标文件路径
-        Path targetFilePath = Paths.get(storagePath).resolve(fileHash + "_merged");
+        Path fileDirPath = getFileDirPath(fileHash);
+        try {
+            // 检查并创建目录（包括所有必要的父目录）
+            if (!Files.exists(fileDirPath)) {
+                Files.createDirectories(fileDirPath);
+                System.out.println("目录创建成功: " + fileDirPath.toString());
+            } else {
+                System.out.println("目录已存在: " + fileDirPath.toString());
+            }
+        } catch (Exception e) {
+            throw new FileChunkException(MessageConstant.FAILED_TO_CREATE_SUB_DIR);
+        }
+
+        Path filePath = fileDirPath.resolve(fileHash);
 
         // 创建或覆盖目标文件并合并分片
-        try (OutputStream outputStream = Files.newOutputStream(targetFilePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (OutputStream outputStream = Files.newOutputStream(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             for (Path chunk : chunkFiles) {
                 try (InputStream inputStream = Files.newInputStream(chunk)) {
                     byte[] buffer = new byte[8192];
@@ -160,7 +231,8 @@ public class FileChunkUtil {
      */
     private int extractChunkNumber(String fileName) {
         // 使用正则表达式提取分片编号
-        String pattern = "(?<=_part)(\\d+)(?=_)";
+//        String pattern = "(?<=_part)(\\d+)(?=_)";
+        String pattern = "part_(\\d+)_";
         java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
         java.util.regex.Matcher m = r.matcher(fileName);
         if (m.find()) {

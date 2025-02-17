@@ -10,12 +10,15 @@ import com.netdisk.utils.JwtUtil;
 import com.netdisk.vo.UserLoginVO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "用户接口")
 @RestController
 @RequestMapping("/user/user")
 @Slf4j
@@ -35,6 +38,7 @@ public class UserController {
      * @param userLoginDTO
      * @return
      */
+    @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         User user = userService.userLogin(userLoginDTO);
@@ -61,6 +65,7 @@ public class UserController {
      * @param userRegisterDTO
      * @return
      */
+    @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result register(@RequestBody UserRegisterDTO userRegisterDTO) {
         log.info("用户注册 userRegisterDTO: {}", userRegisterDTO);

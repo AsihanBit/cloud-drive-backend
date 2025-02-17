@@ -10,5 +10,6 @@ import org.springframework.stereotype.Component;
 public class DiskProperties {
     // 存储路径
     private String storagePath;
+    private String fileDir;
     private String tempDir;
 }

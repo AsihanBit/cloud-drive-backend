@@ -36,8 +36,9 @@
         <mysql.connector.j>9.2.0</mysql.connector.j>
         <druid>1.2.24</druid>
         <lombok>1.18.36</lombok>
-        <knife4j>3.0.3</knife4j>
+        <knife4j>4.5.0</knife4j>
         <jjwt>0.12.6</jjwt>
+        <springdoc-openapi>2.7.0</springdoc-openapi>
     </properties>
 
     <dependencyManagement>
@@ -64,14 +65,20 @@
                 <version>${lombok}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-spring-boot-starter</artifactId>
-                <version>${knife4j}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>${jjwt}</version>
+            </dependency>
+            <!-- swagger3 和 版本修复依赖 -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+                <version>${knife4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc-openapi}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
