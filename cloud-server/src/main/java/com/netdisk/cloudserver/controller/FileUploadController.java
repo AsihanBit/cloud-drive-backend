@@ -1,10 +1,15 @@
 package com.netdisk.cloudserver.controller;
 
+import com.netdisk.cloudserver.service.CheckFilesExist;
 import com.netdisk.cloudserver.service.FileUploadService;
 import com.netdisk.constant.MessageConstant;
+import com.netdisk.context.BaseContext;
 import com.netdisk.dto.ChunkUploadDTO;
+import com.netdisk.dto.FileExistenceCheckDTO;
+import com.netdisk.entity.File;
 import com.netdisk.result.Result;
 import com.netdisk.utils.FileChunkUtil;
+import com.netdisk.utils.RedisUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -22,10 +27,18 @@ public class FileUploadController {
 
     private FileChunkUtil fileChunkUtil;
     private FileUploadService fileUploadService;
+    private CheckFilesExist checkFilesExist;
+    private RedisUtil redisUtil;
 
-    public FileUploadController(FileChunkUtil fileChunkUtil, FileUploadService fileUploadService) {
+    public FileUploadController(
+            FileChunkUtil fileChunkUtil,
+            FileUploadService fileUploadService,
+            CheckFilesExist checkFilesExist,
+            RedisUtil redisUtil) {
         this.fileChunkUtil = fileChunkUtil;
         this.fileUploadService = fileUploadService;
+        this.checkFilesExist = checkFilesExist;
+        this.redisUtil = redisUtil;
     }
 
     @PostMapping("/upload")
@@ -41,6 +54,9 @@ public class FileUploadController {
     @Operation(summary = "分片上传")
     @PostMapping("/chunkUpload")
     public Result chunkUploadFile(ChunkUploadDTO chunkUploadDTO) {
+
+        fileUploadService.uploadChunk(chunkUploadDTO);
+
         log.info("整个文件哈希值: {}", chunkUploadDTO.getFileHash());
         log.info("参数: {} {} {} {} {} {}",
                 chunkUploadDTO.getFile().getOriginalFilename(),
@@ -50,14 +66,21 @@ public class FileUploadController {
                 chunkUploadDTO.getChunkHash(),
                 chunkUploadDTO.getFileHash());
         log.info("分片: {} / {}", chunkUploadDTO.getChunkNumber(), chunkUploadDTO.getChunkCount());
+        log.info("目标路径id: {}", chunkUploadDTO.getTargetPathId());
 
-//        fileUploadService.uploadChunk(chunkUploadDTO);
-        fileChunkUtil.storeChunk(
-                chunkUploadDTO.getFile(),
-                chunkUploadDTO.getFileHash(),
-                chunkUploadDTO.getChunkNumber(),
-                chunkUploadDTO.getChunkHash());
-        // 这里可以添加文件分块处理的逻辑
+//        fileChunkUtil.storeChunk(
+//                chunkUploadDTO.getFile(),
+//                chunkUploadDTO.getFileHash(),
+//                chunkUploadDTO.getChunkNumber(),
+//                chunkUploadDTO.getChunkHash());
+        return Result.success();
+    }
+
+
+    @Operation(summary = "分片上传至用户指定目录")
+    @PostMapping("/chunkUpload/test")
+    public Result uploadChunkToUserPath(ChunkUploadDTO chunkUploadDTO, Integer path) {
+
         return Result.success();
     }
 
@@ -72,28 +95,47 @@ public class FileUploadController {
 //        fileChunkUtil.mergeChunks("4e9c7f46c0cc45912a25d58c01e02235"); // butter图片
 //        fileMergeUtil.mergeChunks("1721076083742c27273c458476d5e3a0"); // 一个txt
 
-        
+
         return Result.success();
     }
 
     @Operation(summary = "文件存在性判断")
-    @GetMapping("/fileIsExist")
-    public Result fileIsExist(@RequestParam String fileHash) {
-        boolean isExist = fileChunkUtil.checkFileExists(fileHash);
+    @PostMapping("/fileIsExist")
+    public Result fileIsExist(@RequestBody FileExistenceCheckDTO fileExistenceCheckDTO) {
+        // 需要: 文件名 pid (file_id file_size file_cover) [file_extension]
+        // @RequestParam String fileHash, @RequestParam Integer targetPathId
+        // 文件存在判断-数据库
+        File file = checkFilesExist.checkFileExistByMD5(fileExistenceCheckDTO);
+        if (file == null) {
+            return Result.success(false);
+        }
+        fileUploadService.userUploadFile(fileExistenceCheckDTO, file);
+        return Result.success(true);
+
+        /*
+        // 文件存在判断-本地存储
+        boolean isExist = fileChunkUtil.checkFileExistsLS(fileExistenceCheckDTO.getFileHash());
         if (isExist) {
             log.info("文件已存在");
+            // 用户文件上传记录保存至 数据库
+            fileUploadService.userUploadFileIsExist(fileExistenceCheckDTO);
         } else {
             log.info("文件是新文件");
         }
         return Result.success(isExist);
+        */
     }
 
     @Operation(summary = "分片存在性判断")
     @GetMapping("/chunkIsExist")
     public Result chunkIsExist(@RequestParam String fileHash, @RequestParam String chunkHash, @RequestParam Integer chunkNumber) {
-        boolean isExist = fileChunkUtil.checkChunkExists(fileHash, chunkHash, chunkNumber);
+        // 分片存在性-本地存储式判断
+//        boolean isExist = fileChunkUtil.checkChunkExistsLS(fileHash, chunkHash, chunkNumber);
+        Integer userId = BaseContext.getCurrentId();
+        boolean isExist = redisUtil.checkChunkExists(userId, fileHash, chunkNumber);
         if (isExist) {
             log.info("分片已存在");
+            // 存储式-分片上传记录保存至 redis
         } else {
             log.info("分片是新文件");
         }

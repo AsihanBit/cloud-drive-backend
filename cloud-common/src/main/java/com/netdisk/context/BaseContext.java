@@ -2,13 +2,13 @@ package com.netdisk.context;
 
 public class BaseContext {
 
-    private static final ThreadLocal<Long> threadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> threadLocal = new ThreadLocal<>();
 
-    public static void setCurrentId(Long id) {
+    public static void setCurrentId(Integer id) {
         threadLocal.set(id);
     }
 
-    public static long getCurrentId() {
+    public static Integer getCurrentId() {
         return threadLocal.get();
     }
 

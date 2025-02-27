@@ -20,6 +20,13 @@
     </properties>
 
     <dependencies>
+        <!-- 其他模块 -->
+        <dependency>
+            <groupId>com.netdisk</groupId>
+            <artifactId>cloud-pojo</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- 父项目模块管理 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -36,6 +43,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>io.jsonwebtoken</groupId>-->

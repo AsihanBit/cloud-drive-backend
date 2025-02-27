@@ -41,7 +41,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // 提取 JWT
             // 校验 JWT
-            log.info("authHeader不为空");
+//            log.info("authHeader不为空");
         } else {
             log.info("authHeader为空");
         }
@@ -50,7 +50,7 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         try {
             log.info("jwt校验:{}", token);
             Jws<Claims> jwsClaims = jwtUtil.parseJwt(token);
-            Long uid = Long.valueOf(jwsClaims.getPayload().getSubject());
+            Integer uid = Integer.valueOf(jwsClaims.getPayload().getSubject());
             log.info("拦截器: 用户id {}", uid);
             BaseContext.setCurrentId(uid);
             // 3.通过, 放行

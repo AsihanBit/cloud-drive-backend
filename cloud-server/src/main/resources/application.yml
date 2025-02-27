@@ -12,27 +12,16 @@ spring:
     username: root
     password: 123456
     type: com.alibaba.druid.pool.DruidDataSource
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 123456
+      database: 1
   servlet:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
-
-#knife4j:
-#  enable: false
-#  setting:
-#    language: zh_cn
-## springdoc-openapi项目配置
-#springdoc:
-#  swagger-ui:
-#    path: /swagger-ui.html
-#    tags-sorter: alpha
-#    operations-sorter: alpha
-#  api-docs:
-#    path: /v3/api-docs
-#  group-configs:
-#    group: 'default'
-#    paths-to-match: '/**'
-#    packages-to-scan: com.xiaominfo.knife4j.demo.web
 
 mybatis:
   #mapper配置文件
@@ -41,7 +30,6 @@ mybatis:
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true
-
 
 cloud-drive:
   disk:

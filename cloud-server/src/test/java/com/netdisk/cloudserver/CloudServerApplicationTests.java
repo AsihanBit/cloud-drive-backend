@@ -5,7 +5,9 @@ import com.netdisk.exception.FileChunkException;
 import com.netdisk.properties.DiskProperties;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.FileInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
 
 import java.io.File;
@@ -20,11 +22,10 @@ import java.nio.file.StandardCopyOption;
 //@SpringBootTest
 class CloudServerApplicationTests {
 
+    @Autowired
     private DiskProperties diskProperties;
-
-    public CloudServerApplicationTests(DiskProperties diskProperties) {
-        this.diskProperties = diskProperties;
-    }
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
     @Test
@@ -69,6 +70,28 @@ class CloudServerApplicationTests {
         Path chunkFilePath = completeTempDir.resolve(hashPrefix + "_" + String.format("%05d", "1"));
 
 
+    }
+
+
+    @Test
+    public void testRedis() {
+        System.out.println("测试redis");
+        System.out.println(redisTemplate);
+        redisTemplate.opsForValue().set("key1", "value1");
+    }
+
+    @Test
+    public void testFileExtension() {
+        String itemName = "l月外网搬运 - 副本 - 副本.zip";
+        if (itemName == null) {
+            System.out.println("");
+        }
+        int lastIndex = itemName.lastIndexOf('.');
+        if (lastIndex == -1 || lastIndex == itemName.length() - 1) {
+            System.out.println("");
+
+        }
+        System.out.println(itemName.substring(lastIndex + 1));
     }
 
 }

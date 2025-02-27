@@ -1,6 +1,7 @@
 package com.netdisk.utils;
 
 import com.netdisk.constant.MessageConstant;
+import com.netdisk.entity.MergeFileResult;
 import com.netdisk.exception.FileChunkException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.nio.file.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @AllArgsConstructor
@@ -24,6 +26,7 @@ public class FileChunkUtil {
     private String storagePath;
     private String fileDir;
     private String tempDir;
+
 
     /**
      * 分片保存时:  storagePath/tempDir/ 整文件md5 / part_1_分片md5
@@ -85,18 +88,18 @@ public class FileChunkUtil {
     }
 
     /**
-     * 分片存在性检查
+     * 分片存在性检查 - 存储式
      */
-    public boolean checkChunkExists(String fileHash, String chunkHash, Integer chunkNumber) {
+    public boolean checkChunkExistsLS(String fileHash, String chunkHash, Integer chunkNumber) {
         Path chunkPath = getChunkCompletePath(fileHash, chunkHash, chunkNumber);
         // 检查分片文件是否存在
         return Files.exists(chunkPath);
     }
 
     /**
-     * 文件存在性检查
+     * 文件存在性检查 - 存储式
      */
-    public boolean checkFileExists(String md5) {
+    public boolean checkFileExistsLS(String md5) {
         Path filePath = getFileCompletePath(md5);
         // 检查文件是否存在
         return Files.exists(filePath);
@@ -153,15 +156,22 @@ public class FileChunkUtil {
      * @param fileHash 文件的哈希值（或唯一标识）
      * @throws IOException 如果合并过程中发生 I/O 错误
      */
-    public void mergeChunks(String fileHash) throws IOException {
+    public MergeFileResult mergeChunks(String fileHash) {
         // 获取临时目录下对应文件的所有分片
-        Path completeTempDir = Paths.get(storagePath).resolve(tempDir).resolve(fileHash);
-        List<Path> chunkFiles = Files.list(completeTempDir)
-                .filter(path -> path.getFileName().toString().startsWith("part_"))
-//                .filter(path -> path.getFileName().toString().matches(fileHash + "_part\\d+_.*"))
-//                .filter(path -> path.getFileName().toString().matches("part_(\\d+)_.*"))
-                .sorted(createCustomComparator()) // 确保按正确的顺序合并
-                .collect(Collectors.toList());
+//        Path completeTempDir = Paths.get(storagePath).resolve(tempDir).resolve(fileHash);
+        Path completeTempDir = getChunkDirPath(fileHash);
+        List<Path> chunkFiles = null;
+        try {
+            chunkFiles = Files.list(completeTempDir)
+                    .filter(path -> path.getFileName().toString().startsWith("part_"))
+                    //                .filter(path -> path.getFileName().toString().matches(fileHash + "_part\\d+_.*"))
+                    //                .filter(path -> path.getFileName().toString().matches("part_(\\d+)_.*"))
+                    .sorted(createCustomComparator()) // 确保按正确的顺序合并
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.info("要合并的文件不存在异常");
+            throw new RuntimeException(e);
+        }
 
         // 目标文件路径
         Path fileDirPath = getFileDirPath(fileHash);
@@ -193,7 +203,23 @@ public class FileChunkUtil {
                 }
                 // 删除已处理的分片
 //                Files.delete(chunk);
+                // 注:这里返回 MergeFileResult 的话,不会每次合并都会输出log.info,只会输出一次,神奇
             }
+
+            // 计算合并后文件的 MD5 值
+            String md5 = calculateFileMD5(filePath);
+            // 计算合并后文件的字节大小
+            Long fileSize = Files.size(filePath);
+            log.info("合并后的文件 MD5: {}", md5);
+            log.info("合并后的文件大小 (字节): {}", fileSize);
+            MergeFileResult mergeFileResult = MergeFileResult.builder()
+                    .fileHash(md5)
+                    .fileSize(fileSize)
+                    .build();
+            return mergeFileResult;
+        } catch (IOException e) {
+            log.info("合并出错");
+            throw new RuntimeException(e);
         }
 
         // 可选：删除已合并的分片以节省空间
@@ -203,6 +229,30 @@ public class FileChunkUtil {
 
         // 可选：删除空的临时目录
 //        Files.deleteIfExists(completeTempDir);
+//        return new MergeFileResult();
+    }
+
+    public void deleteAllChunks(String fileHash) {
+        // 获取所有分片临时目录
+        Path completeTempDir = getChunkDirPath(fileHash);
+
+        // 可选：删除空的临时目录
+        try {
+            // 删除目录中的所有文件和子目录
+            if (Files.isDirectory(completeTempDir)) {
+                try (Stream<Path> entries = Files.list(completeTempDir)) {
+                    for (Path entry : entries.toArray(Path[]::new)) {
+                        Files.deleteIfExists(entry);
+                    }
+                }
+            }
+            // 删除空目录
+            Files.deleteIfExists(completeTempDir);
+        } catch (IOException e) {
+            log.info("删除操作:获取目录失败");
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**
@@ -242,6 +292,18 @@ public class FileChunkUtil {
         }
     }
 
+
+    private String calculateFileMD5(Path filePath) {
+        try (InputStream inputStream = Files.newInputStream(filePath)) {
+            // 使用 DigestUtils.md5DigestAsHex 计算文件的 MD5 值
+            return DigestUtils.md5DigestAsHex(inputStream);
+        } catch (IOException e) {
+            log.info("计算md5出错");
+            throw new RuntimeException(e);
+        }
+    }
+
+    // 保存分片时, redis中保存分片信息
     public static String fileMD5(MultipartFile file) {
         byte[] fileBytes = null;
         try {

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.cloudserver.mapper.FileUploadMapper">
+    <!--    文件名超出长度异常-->
+    <insert id="insertUserFile">
+        insert into user_files (user_id, item_name, item_type, p_id, directory_level,
+                                file_id, file_size, file_cover, file_extension,
+                                upload_time, update_time, recycle_status)
+        VALUES (#{userId}, #{itemName}, #{itemType}, #{pId}, #{directoryLevel},
+                #{fileId}, #{fileSize}, #{fileCover}, #{fileExtension},
+                #{upLoadTime}, #{updateTime}, #{recycleStatus})
+    </insert>
+    <!-- file 中存储新文件信息 -->
+    <insert id="insertNewFile" useGeneratedKeys="true" keyProperty="fileId">
+        insert into file (file_md5, storage_location, file_size, file_cover,
+                          reference_count, user_id, transcode_status, ban_status,
+                          create_time, update_time)
+        VALUES (#{fileMd5}, #{storageLocation}, #{fileSize}, #{fileCover},
+                #{referenceCount}, #{userId}, #{transcodeStatus}, #{banStatus},
+                #{createTime}, #{updateTime})
+    </insert>
+    <!-- 获取父文件夹PId的层级DirectoryLevel -->
+    <select id="getPIdDirectoryLevel" resultType="java.lang.Short">
+        select directory_level
+        from user_files
+        where item_id = #{PId}
+    </select>
+</mapper>

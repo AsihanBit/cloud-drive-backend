@@ -52,6 +52,7 @@ public class UserController {
         log.info("解析后: {}", parsedName);
 
         UserLoginVO userLoginVO = UserLoginVO.builder()
+                .userId(user.getUserId())
                 .username(user.getUsername())
                 .token(userToken)
                 .build();

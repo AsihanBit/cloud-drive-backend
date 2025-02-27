@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.cloudserver.mapper.CheckFilesExistMapper">
+
+    <!-- MD5查询文件 -->
+    <select id="selectFileByMD5" resultType="com.netdisk.entity.File">
+        select *
+        from file
+        where file_md5 = #{fileHash}
+        limit 1
+    </select>
+    <!-- item_id 查询文件 -->
+    <select id="selectFileByFileId" resultType="com.netdisk.entity.File">
+        select *
+        from file
+        where file_id = #{fileId}
+        limit 1
+    </select>
+    <!-- 检查用户是否拥有文件 -->
+    <select id="checkUserHasFile" resultType="com.netdisk.entity.UserFiles">
+        select *
+        from user_files
+        where item_id = #{itemId}
+          and file_id = #{fileId}
+          and user_id = #{userId}
+    </select>
+</mapper>
