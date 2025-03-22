@@ -17,6 +17,8 @@ public class RedisUtil {
         this.redisTemplate = redisTemplate;
     }
 
+    // ======================= 文件分片 =======================
+
     /**
      * 保存分片信息至 redis
      */
@@ -54,5 +56,23 @@ public class RedisUtil {
         redisTemplate.delete(key);
         log.info("已删除文件的所有分片信息: 用户ID {}, 文件MD5 {}", userId, fileMd5);
     }
+
+
+    // ======================= 文件防止递归 =======================
+    public void recordSavedItemId(Integer userId, Integer shareId, Integer savedItemId) {
+        String key = "savedItemIds:" + userId + ":" + shareId;
+        redisTemplate.opsForSet().add(key, savedItemId);
+    }
+
+    public boolean checkSavedItemIdExists(Integer userId, Integer shareId, Integer savedItemId) {
+        String key = "savedItemIds:" + userId + ":" + shareId;
+        return redisTemplate.opsForSet().isMember(key, savedItemId);
+    }
+
+    public void deleteAllSavedItemIds(Integer userId, Integer shareId) {
+        String key = "savedItemIds:" + userId + ":" + shareId;
+        redisTemplate.delete(key);
+    }
+
 
 }

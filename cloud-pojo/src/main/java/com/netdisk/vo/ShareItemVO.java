@@ -1,29 +1,29 @@
 package com.netdisk.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserItemsVO {
+@Builder
+public class ShareItemVO {
+    private Integer shareItemId;
+    private Integer shareId;
+    private Integer pShareItemId;
+    private Integer userId;
+
     private Integer itemId;
     private String itemName;
     private Short itemType;
-    //    @JsonProperty("pId") // 显式指定 JSON 字段名为 pId
-    private Integer pId;
-    private Short directoryLevel;
-
 
     private Integer fileId;
     private Long fileSize;
+    private String fileCover;
     private String fileExtension;
 
     private LocalDateTime updateTime;

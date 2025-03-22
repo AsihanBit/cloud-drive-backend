@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.netdisk.cloudserver.mapper.FileShareMapper">
+
+    <!-- 新增分享 -->
+    <insert id="insertShare" useGeneratedKeys="true" keyProperty="shareId">
+        insert into share (share_code, user_id, username, nickname,
+                           expire_type, expire_time, access_count, access_limit, share_status, create_time)
+        VALUES (#{shareCode}, #{userId}, #{username}, #{nickname},
+                #{expireType}, #{expireTime}, #{accessCount}, #{accessLimit}, #{shareStatus}, #{createTime})
+    </insert>
+    <!-- 对于分享 添加用户分享的条目 -->
+    <insert id="insertShareItem" useGeneratedKeys="true" keyProperty="shareItemId">
+        insert into share_item (share_id, p_share_item_id, user_id,
+                                item_id, item_name, item_type,
+                                file_id, file_size, file_cover, file_extension,
+                                update_time)
+        VALUES (#{shareId}, #{pShareItemId}, #{userId},
+                #{itemId}, #{itemName}, #{itemType},
+                #{fileId}, #{fileSize}, #{fileCover}, #{fileExtension},
+                #{updateTime})
+    </insert>
+
+    <!-- 获取用户自己分享过的文件列表 -->
+    <select id="getUserOwnSharedList" resultType="com.netdisk.dto.UserSharedDTO">
+        select *
+        from share
+        where user_id = #{userId}
+    </select>
+
+    <!-- 根据 shareId 删除 share 表 -->
+    <delete id="deleteSharedItemById">
+        delete
+        from share
+        where share_id = #{shareId}
+    </delete>
+    <!-- 根据 shareId 删除 share_item 表 -->
+    <delete id="deleteSharedItemFilesById">
+        delete
+        from share_item
+        where share_id = #{shareId}
+    </delete>
+    <!-- 根据 分享id 获取自己分享的文件列表 -->
+    <select id="getMyShareFilesByShareId" resultType="com.netdisk.vo.ShareItemVO">
+        select *
+        from share_item
+        where share_id = #{shareId}
+          and p_share_item_id = #{pItemId}
+          and user_id = #{userId}
+    </select>
+    <!-- 获取外部分享的文件列表 -->
+    <select id="getOtherShareFilesByShareId" resultType="com.netdisk.vo.ShareItemVO">
+        select *
+        from share_item
+        where share_id = #{shareId}
+          and p_share_item_id = #{pItemId}
+    </select>
+
+    <!-- 重置分享的 过期时间 访问限制 -->
+    <update id="resetShareExpire">
+        update share
+        set expire_type  = #{expireType},
+            expire_time  = #{expireTime},
+            access_limit = #{accessLimit}
+        where share_id = #{shareId}
+          and user_id = #{userId}
+    </update>
+
+    <!-- 使用 share_code share_id 查询 Share -->
+    <select id="getShareByShareId" resultType="com.netdisk.entity.Share">
+        select *
+        from share
+        where share_id = #{shareId}
+        limit 1
+    </select>
+
+    <!-- 分享 - 增加一次访问记录 -->
+    <update id="incrementShareAccessCount">
+        update share
+        set access_count = #{accessCount}
+        where share_id = #{shareId}
+    </update>
+
+    <!-- 返回分享里的文件列表 -->
+    <select id="getShareFilesByShareIdAndPId" resultType="com.netdisk.vo.ShareItemVO">
+        select *
+        from share_item
+        where share_id = #{shareId}
+          and p_share_item_id = #{pShareItemId}
+    </select>
+    <!-- 使用 share_item_id 数组获取分享的条目列表 -->
+    <select id="getShareItemsByShareItemIds" resultType="com.netdisk.entity.ShareItem">
+        select *
+        from share_item
+        where share_item_id in
+        <foreach item="itemId" collection="selectedShareItemIds"
+                 open="(" separator="," close=")">
+            #{itemId}
+        </foreach>
+    </select>
+
+
+</mapper>

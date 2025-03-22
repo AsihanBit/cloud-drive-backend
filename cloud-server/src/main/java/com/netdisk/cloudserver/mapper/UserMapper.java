@@ -19,4 +19,12 @@ public interface UserMapper {
      * @return
      */
     User queryUserByUsername(String username);
+
+    /**
+     * 根据 id 查询用户
+     *
+     * @param userId
+     * @return
+     */
+    User selectUserByUserId(Integer userId);
 }

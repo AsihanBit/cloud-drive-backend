@@ -16,4 +16,10 @@
         where username = #{username}
         limit 1
     </select>
+    <!-- 根据 id 查询用户 -->
+    <select id="selectUserByUserId" resultType="com.netdisk.entity.User">
+        select *
+        from user
+        where user_id = #{userId}
+    </select>
 </mapper>

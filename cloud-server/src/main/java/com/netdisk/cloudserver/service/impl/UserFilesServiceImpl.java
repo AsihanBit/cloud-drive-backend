@@ -3,16 +3,21 @@ package com.netdisk.cloudserver.service.impl;
 import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.service.UserFilesService;
 import com.netdisk.context.BaseContext;
+import com.netdisk.dto.CreateFolderDTO;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.vo.UserItemsVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserFilesServiceImpl implements UserFilesService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserFilesServiceImpl.class);
     private UserFilesMapper userFilesMapper;
 
     public UserFilesServiceImpl(UserFilesMapper userFilesMapper) {
@@ -38,6 +43,7 @@ public class UserFilesServiceImpl implements UserFilesService {
                     .itemId(userFile.getItemId())
                     .itemName(userFile.getItemName())
                     .itemType(userFile.getItemType())
+                    .pId(userFile.getPId())
                     .directoryLevel(userFile.getDirectoryLevel())
                     .fileId(userFile.getFileId())
                     .fileSize(userFile.getFileSize())
@@ -48,5 +54,63 @@ public class UserFilesServiceImpl implements UserFilesService {
         }
 
         return userItemsVOList;
+    }
+
+    /**
+     * 用户根据 item_id 删除条目
+     *
+     * @param itemId
+     */
+    @Override
+    public void deleteUserItemByItemId(Integer itemId) {
+        Integer userId = BaseContext.getCurrentId();
+        // 检查用户文件是否存在
+        UserFiles userFiles = userFilesMapper.selectUserItemByItemId(userId, itemId);
+        if (userFiles == null) {
+            log.info("用户删除的文件不存在");
+            // 自定义异常
+        }
+        // 根据item_id删除条目, 删除操作所影响的行数
+        Integer delResultItemId = userFilesMapper.deleteUserItemByItemId(userId, itemId);
+        log.info("删除条目-影响行数:{}", delResultItemId);
+
+        // 删除item_id这个条目的子条目
+        Integer delResultPId = userFilesMapper.deleteUserItemsByPId(userId, itemId);
+        log.info("删除子条目-影响行数:{}", delResultPId);
+
+    }
+
+    /**
+     * 用户创建新文件夹
+     *
+     * @param createFolderDTO
+     */
+    @Override
+    public void createNewFolder(CreateFolderDTO createFolderDTO) {
+        Integer userId = BaseContext.getCurrentId();
+        // 查询父条目信息
+        UserFiles userFolderItem = userFilesMapper.selectUserItemByItemId(userId, createFolderDTO.getPId());
+
+//        Short folderDirectoryLevel;
+        short folderDirectoryLevel;
+        if (createFolderDTO.getPId() == 0 && userFolderItem == null) {
+//            folderDirectoryLevel = Short.valueOf("0");
+//            folderDirectoryLevel = Short.parseShort("0");
+            folderDirectoryLevel = 0;
+        } else {
+            folderDirectoryLevel = (short) (userFolderItem.getDirectoryLevel() + 1);
+        }
+
+        UserFiles userNewFolder = UserFiles.builder()
+                .userId(userId)
+                .itemName(createFolderDTO.getFolderName())
+                .itemType(Short.valueOf("0"))
+                .pId(createFolderDTO.getPId())
+                .directoryLevel(folderDirectoryLevel)
+                .upLoadTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .recycleStatus(Short.valueOf("0"))
+                .build();
+        userFilesMapper.insertNewItem(userNewFolder);
     }
 }

@@ -14,4 +14,41 @@ public interface UserFilesMapper {
      * @return
      */
     List<UserFiles> selectUserItemsByItemPId(Integer userId, Integer itemPId);
+
+    /**
+     * 根据 item_id 检查用户条目
+     *
+     * @param userId
+     * @param itemId
+     * @return
+     */
+    UserFiles selectUserItemByItemId(Integer userId, Integer itemId);
+
+    /**
+     * 根据item_id删除条目
+     *
+     * @param userId
+     * @param itemId
+     * @return
+     */
+    Integer deleteUserItemByItemId(Integer userId, Integer itemId);
+
+    /**
+     * 删除item_id这个条目的子条目
+     *
+     * @param userId
+     * @param itemPId
+     * @return
+     */
+    Integer deleteUserItemsByPId(Integer userId, Integer itemPId);
+
+    /**
+     * 新增用户条目
+     *
+     * @param userNewFolder
+     */
+    // TODO 多个Service Mapper中可能有重复的
+    void insertNewItem(UserFiles userNewFolder);
+
+
 }
