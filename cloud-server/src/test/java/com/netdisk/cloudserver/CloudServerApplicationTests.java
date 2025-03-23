@@ -1,8 +1,19 @@
 package com.netdisk.cloudserver;
 
+import cn.hutool.json.JSONConfig;
+import cn.hutool.json.JSONUtil;
+import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.constant.MessageConstant;
+import com.netdisk.entity.UserFiles;
 import com.netdisk.exception.FileChunkException;
 import com.netdisk.properties.DiskProperties;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.xcontent.XContentType;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Map;
 
 //@SpringBootTest
 class CloudServerApplicationTests {
@@ -26,11 +39,12 @@ class CloudServerApplicationTests {
     private DiskProperties diskProperties;
     @Autowired
     private RedisTemplate redisTemplate;
+    @Autowired
+    private RestHighLevelClient esClient;
 
+    @Autowired
+    private UserFilesMapper userFilesMapper;
 
-    @Test
-    void contextLoads() {
-    }
 
     @Test
     public void getFileMD5() throws IOException {
@@ -92,6 +106,30 @@ class CloudServerApplicationTests {
 
         }
         System.out.println(itemName.substring(lastIndex + 1));
+    }
+
+
+    @Test
+    public void importUserFileDataToEs() throws IOException {
+        // 从 user_file 表中查询所有数据
+        List<UserFiles> userFiles = userFilesMapper.selectAllUserItems();
+
+        // 配置 JSONUtil 忽略 null 字段
+        JSONConfig config = JSONConfig.create().setIgnoreNullValue(true);
+
+
+        // 1. 请求对象
+        BulkRequest request = new BulkRequest();
+        // 2. 请求参数
+        for (UserFiles item : userFiles) {
+            request.add(
+                    new IndexRequest("user_files")
+                            .id(item.getItemId().toString())
+                            .source(JSONUtil.toJsonStr(item, config), XContentType.JSON));
+
+        }
+
+        esClient.bulk(request, RequestOptions.DEFAULT);
     }
 
 }

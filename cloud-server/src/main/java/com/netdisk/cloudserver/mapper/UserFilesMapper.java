@@ -51,4 +51,10 @@ public interface UserFilesMapper {
     void insertNewItem(UserFiles userNewFolder);
 
 
+    /**
+     * 从 user_file 表中查询所有数据
+     *
+     * @return
+     */
+    List<UserFiles> selectAllUserItems();
 }

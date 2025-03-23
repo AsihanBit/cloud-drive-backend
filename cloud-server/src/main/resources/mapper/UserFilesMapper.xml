@@ -46,4 +46,11 @@
     </insert>
 
 
+    <!-- 从 user_file 表中查询所有数据 -->
+    <select id="selectAllUserItems" resultType="com.netdisk.entity.UserFiles">
+        select *
+        from user_files
+    </select>
+
+
 </mapper>
