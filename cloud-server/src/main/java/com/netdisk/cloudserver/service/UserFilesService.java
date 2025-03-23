@@ -29,4 +29,11 @@ public interface UserFilesService {
      */
     void createNewFolder(CreateFolderDTO createFolderDTO);
 
+    /**
+     * 检查用户是否拥有条目
+     *
+     * @param itemId
+     * @return
+     */
+    UserFiles checkItemOwnership(Integer itemId);
 }

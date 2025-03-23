@@ -113,4 +113,17 @@ public class UserFilesServiceImpl implements UserFilesService {
                 .build();
         userFilesMapper.insertNewItem(userNewFolder);
     }
+
+    /**
+     * 检查用户是否拥有条目
+     *
+     * @param itemId
+     * @return
+     */
+    @Override
+    public UserFiles checkItemOwnership(Integer itemId) {
+        Integer userId = BaseContext.getCurrentId();
+        UserFiles item = userFilesMapper.selectUserItemByItemId(userId, itemId);
+        return item;
+    }
 }

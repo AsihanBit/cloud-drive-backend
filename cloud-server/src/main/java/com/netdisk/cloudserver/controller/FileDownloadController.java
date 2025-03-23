@@ -8,10 +8,12 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/user/file")
@@ -28,8 +30,8 @@ public class FileDownloadController {
     }
 
     @GetMapping("/downloadTest")
-    public void downloadFile1(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        File file = new File("E:\\cloudfile\\233.txt");
+    public void downloadFile1(@RequestParam("fullfilename") String fullFilename, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        File file = new File("E:\\cloudfile\\2024-steam-冬季.png");
         response.setCharacterEncoding("utf-8");
         InputStream is = null;
         OutputStream os = null;
@@ -207,6 +209,7 @@ public class FileDownloadController {
         return;
 //        return Result.success();
     }
+
 
 }
 
