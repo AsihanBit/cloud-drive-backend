@@ -35,8 +35,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/user/login", "/user/user/register")
-                .excludePathPatterns("/user/file/chunkDownload")
-                .excludePathPatterns("/user/file/downloadTest")
+//                .excludePathPatterns("/user/file/chunkDownload")
+//                .excludePathPatterns("/user/file/downloadTest")
                 .excludePathPatterns("/user/view/file")
                 .excludePathPatterns("/user/view/filetest");
 //                .excludePathPatterns("/user/account/register");
