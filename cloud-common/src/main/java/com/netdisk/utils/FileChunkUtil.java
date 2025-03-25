@@ -202,7 +202,7 @@ public class FileChunkUtil {
                     outputStream.flush();
                 }
                 // 删除已处理的分片
-//                Files.delete(chunk);
+                Files.delete(chunk);
                 // 注:这里返回 MergeFileResult 的话,不会每次合并都会输出log.info,只会输出一次,神奇
             }
 

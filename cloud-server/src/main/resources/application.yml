@@ -1,22 +1,22 @@
 server:
   port: 8080
-
 spring:
   application:
     name: cloud-server
   profiles:
+    # 本地: local 开发: dev
     active: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/cloud_drive
+    url: jdbc:mysql://${cloud-drive.db.host}:3306/cloud_drive
     username: root
-    password: 123456
+    password: ${cloud-drive.db.pw}
     type: com.alibaba.druid.pool.DruidDataSource
   data:
     redis:
-      host: localhost
+      host: ${cloud-drive.redis.host}
       port: 6379
-      password: 123456
+      password: ${cloud-drive.redis.pw}
       database: 1
   servlet:
     multipart:
@@ -33,12 +33,31 @@ mybatis:
 
 cloud-drive:
   disk:
-    storage-path: E:\\cloudfile
-    file-dir: file
-    temp-dir: temp
+    storage-path: ${cloud-drive.disk.storage-path}
+    file-dir: ${cloud-drive.disk.file-dir}
+    temp-dir: ${cloud-drive.disk.temp-dir}
   jwt:
     user-secret-key: cloudDriveSecurityTokenKeyLong32
     # 7200000 2小时
-    user-ttl: 72000000
+    user-ttl: ${cloud-drive.jwt.user-ttl}
     # Authentication
     user-token-name: authorization
+
+# ElasticSearch 文件搜索
+elastic-search:
+  host: ${elastic-search.host}
+  port: ${elastic-search.port}
+  scheme: ${elastic-search.scheme}
+
+# kkFileView 文件预览
+kkfileview:
+  origin:
+    protocol: ${kkfileview.origin.protocol} # HTTP 协议
+    host: ${kkfileview.origin.host}  # 主机地址/容器
+    port: ${kkfileview.origin.port} # 端口号
+    path: ${kkfileview.origin.path}  # 路径
+  preview:
+    protocol: ${kkfileview.preview.protocol}
+    host: ${kkfileview.preview.host}
+    port: ${kkfileview.preview.port}
+    path: ${kkfileview.preview.path}

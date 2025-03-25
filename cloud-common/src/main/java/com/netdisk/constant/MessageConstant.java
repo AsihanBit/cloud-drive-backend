@@ -27,6 +27,8 @@ public class MessageConstant {
     public static final String DISK_PROPERTIES_NULL = "Disk properties cannot be null";
     public static final String TEMP_DIR_PATH_NOT_CONFIGURED = "Temporary directory path is not configured";
     public static final String FAILED_TO_STORE_CHUNK = "分片保存失败";
+    public static final String FAILED_TO_CLEAR_CHUNK_TEMP_FILE = "分片临时文件清除失败";
+    public static final String FAILED_TO_DELETE_CHUNK_TEMP_DIRECTORY = "分片临时文件夹删除失败";
 
     // 其他通用异常消息
     public static final String FILE_IS_EMPTY = "文件为空";

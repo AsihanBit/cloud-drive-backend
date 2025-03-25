@@ -1,38 +1,39 @@
 cloud-drive:
   # 数据库
   db:
-    host: mysql
-    pw: MnMysql123*
+    host: localhost
+    pw: 123456
   # Redis
   redis:
-    host: redis
-    pw: redis123
+    host: localhost
+    pw: 123456
   # 文件存储目录
   disk:
-    storage-path: /clouddrive/cloudfile
+    storage-path: E:\\cloudfile
     file-dir: file
     temp-dir: temp
   # 用户令牌
   jwt:
-    # 7200000 2小时
-    user-ttl: 7200000
+    # 72000000 20小时
+    user-ttl: 72000000
+
 # ElasticSearch 文件搜索
 elastic-search:
-  host: elastic
+  host: localhost
   port: 9200
   scheme: http
   username: elastic
-  password: elastic123
+  password: CueEX13fbbaaNdP6kPn5
 
 # kkFileView 文件预览
 kkfileview:
   origin:
     protocol: http # HTTP 协议
-    host: cloud-server  # 容器
+    host: localhost  # 主机地址 或者 localhost
     port: 8080       # 端口号
     path: /user/view/file  # 路径
   preview:
     protocol: http
-    host: fileview.cloud.softspark.cn  # 容器
-    port: 80  # 8012 目前是nginx转发 80
+    host: localhost
+    port: 8012
     path: /onlinePreview
