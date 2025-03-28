@@ -33,7 +33,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
 
     /**
-     * 用户文件上传记录保存至 数据库
+     * 秒传: 用户文件上传记录保存至 数据库
      *
      * @param fileExistenceCheckDTO
      */

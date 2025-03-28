@@ -5,6 +5,7 @@ import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.mapper.UserMapper;
 import com.netdisk.cloudserver.service.FileShareService;
 import com.netdisk.context.BaseContext;
+import com.netdisk.dto.ShareResultDTO;
 import com.netdisk.dto.UserSaveSelectedItemsDTO;
 import com.netdisk.dto.UserSharedDTO;
 import com.netdisk.dto.UserSharedItemsDTO;
@@ -13,32 +14,44 @@ import com.netdisk.entity.ShareItem;
 import com.netdisk.entity.User;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.enums.ShareExpirationEnums;
+import com.netdisk.enums.ShareTransferEnum;
+import com.netdisk.properties.ShareProperties;
+import com.netdisk.result.Result;
+import com.netdisk.utils.CipherUtils;
 import com.netdisk.utils.RedisUtil;
 import com.netdisk.utils.ShareCodeUtil;
 import com.netdisk.vo.ShareItemVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class FileShareServiceImpl implements FileShareService {
     private FileShareMapper fileShareMapper;
     private UserFilesMapper userFilesMapper;
     private UserMapper userMapper;
     private RedisUtil redisUtil;
+    private ShareProperties shareProperties;
 
 
     public FileShareServiceImpl(
             FileShareMapper fileShareMapper,
             UserFilesMapper userFilesMapper,
             UserMapper userMapper,
-            RedisUtil redisUtil) {
+            RedisUtil redisUtil,
+            ShareProperties shareProperties) {
         this.fileShareMapper = fileShareMapper;
         this.userFilesMapper = userFilesMapper;
         this.userMapper = userMapper;
         this.redisUtil = redisUtil;
+        this.shareProperties = shareProperties;
     }
 
     /**
@@ -47,7 +60,7 @@ public class FileShareServiceImpl implements FileShareService {
      * @param userShareItemsDTO
      */
     @Override
-    public void userShareItems(UserSharedItemsDTO userShareItemsDTO) {
+    public ShareResultDTO userShareItems(UserSharedItemsDTO userShareItemsDTO) {
         Integer userId = BaseContext.getCurrentId();
         // 生成提取码
         String shareCode = ShareCodeUtil.generateShareCode();
@@ -73,7 +86,7 @@ public class FileShareServiceImpl implements FileShareService {
                 .createTime(createTime)
                 .build();
         // 新增分享: ps:返回的是受影响的行数,获取主键直接把上面 share.getXxx就可以
-        Integer shareId = fileShareMapper.insertShare(share);
+        Integer affectedRowCount = fileShareMapper.insertShare(share);
         // 遍历子文件加入share_item表
         for (Integer itemId : userShareItemsDTO.getItemIds()) {
             UserFiles userItem = userFilesMapper.selectUserItemByItemId(userId, itemId);
@@ -91,7 +104,7 @@ public class FileShareServiceImpl implements FileShareService {
                     .fileExtension(userItem.getFileExtension())
                     .updateTime(userItem.getUpdateTime())
                     .build();
-            // 对于分享 添加用户分享的条目
+            // 对于分享 添加用户分享的条目 (share_item): 保存用户选的所有父条目到share_item
             fileShareMapper.insertShareItem(shareItem);
             // 如果 userItem.getFileSize()==0 是文件夹,还需遍历递归文件夹
             // 根据userFilesMapper.selectUserItemsByItemPId获取每个item的子item, 然后里面的文件夹,再进行遍历
@@ -104,7 +117,38 @@ public class FileShareServiceImpl implements FileShareService {
 
         }
 
+        Integer shareId = share.getShareId();
+        String shareStr = "";
+        // 加密 分享id
+        try {
+            shareStr = CipherUtils.encrypt(shareId);
+        } catch (Exception e) {
+            // TODO 加密失败,可返回提示
+            throw new RuntimeException(e);
+        }
+        // 对 分享码 进行 URL 编码
+        // 浏览器自动解码,所以获取请求时不需要解码
+        String encodedShareStr;
+        try {
+            encodedShareStr = URLEncoder.encode(shareStr, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            // TODO 编码失败,可返回提示
+            throw new RuntimeException(e);
+        }
 
+        // 构造 分享链接
+        String baseShareLink = shareProperties.getLink().getShareLink();
+
+        // 构造带参数的URL（格式：baseUrl?shareStr=xxx&shareCode=yyy）
+        String shareLinkWithParams = baseShareLink + "?shareStr=" + encodedShareStr + "&shareCode=" + shareCode;
+
+        ShareResultDTO shareTransferResultDTO = ShareResultDTO.builder()
+                .shareStr(shareStr)
+                .shareCode(shareCode)
+                .shareLink(shareLinkWithParams)
+                .build();
+
+        return shareTransferResultDTO;
     }
 
     private void addShareItemsRecursively(Integer shareId, Integer pShareItemId, Integer userId, Integer itemId) {
@@ -252,23 +296,38 @@ public class FileShareServiceImpl implements FileShareService {
      */
     @Transactional
     @Override
-    public void saveSelectedItems(UserSaveSelectedItemsDTO userSaveSelectedItemsDTO) {
+    public ShareTransferEnum saveSelectedItems(UserSaveSelectedItemsDTO userSaveSelectedItemsDTO) {
         // TODO 增加转存记录
+
+        // 解密分享id
+        Integer shareId = null;
+        try {
+            shareId = CipherUtils.decrypt(userSaveSelectedItemsDTO.getShareStr());
+        } catch (Exception e) {
+            // 解码错误
+            log.info("解码错误");
+//            throw new RuntimeException(e);
+            // 响应:错误的分享码格式
+            return ShareTransferEnum.SHARE_STR_ERROR;
+//            return Result.success();
+        }
+
+
         // 1 查询分享信息
-        Share share = fileShareMapper.getShareByShareId(userSaveSelectedItemsDTO.getShareId());
+        Share share = fileShareMapper.getShareByShareId(shareId);
         if (share == null) {
             System.out.println("不存在这个分享");
-            return;
+            return ShareTransferEnum.SHARE_NOT_EXIST;
         }
         if (!share.getShareCode().equals(userSaveSelectedItemsDTO.getExtractCode())) {
             System.out.println("提取码错误");
-            return;
+            return ShareTransferEnum.SHARE_EXTRACT_CODE_ERROR;
         }
         // 直接禁止转存自己目录
         Integer userId = BaseContext.getCurrentId();
         if (share.getUserId().equals(userId)) {
             System.out.println("防止无限递归转存,禁止转存自己文件夹");
-            return;
+            return ShareTransferEnum.SHARE_TRANSFER_OWN_FOLDER;
         }
 
         // 2 保存文件到用户目录
@@ -282,6 +341,8 @@ public class FileShareServiceImpl implements FileShareService {
         for (ShareItem shareItem : shareItems) {
             saveItemRecursively(userId, pItemId, now, share.getUserId(), shareItem.getItemId());
         }
+
+        return ShareTransferEnum.SHARE_TRANSFER_SUCCESS;
 
 //        for (ShareItem shareItem : shareItems) {
 //            UserFiles userItem = userFilesMapper.selectUserItemByItemId(share.getUserId(), shareItem.getItemId());
@@ -307,7 +368,6 @@ public class FileShareServiceImpl implements FileShareService {
 //                System.out.println("转存文件的新主键ItemId" + userItem.getItemId());
 //            }
 //        }
-
 
     }
 

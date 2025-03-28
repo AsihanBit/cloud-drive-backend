@@ -7,6 +7,7 @@ import com.netdisk.constant.MessageConstant;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.exception.FileChunkException;
 import com.netdisk.properties.DiskProperties;
+import com.netdisk.utils.CipherUtils;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -16,15 +17,16 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.xcontent.XContentType;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.FileInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.DigestUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,9 +34,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 
-//@SpringBootTest
+@SpringBootTest
 class CloudServerApplicationTests {
 
+    private static final Logger log = LoggerFactory.getLogger(CloudServerApplicationTests.class);
     @Autowired
     private DiskProperties diskProperties;
     @Autowired
@@ -44,6 +47,8 @@ class CloudServerApplicationTests {
 
     @Autowired
     private UserFilesMapper userFilesMapper;
+
+//    private CipherUtils cipherUtils;
 
 
     @Test
@@ -132,4 +137,38 @@ class CloudServerApplicationTests {
         esClient.bulk(request, RequestOptions.DEFAULT);
     }
 
+
+    // 测试加密算法
+    @Test
+    public void cipherTest() throws Exception {
+        int shareId = 246810;
+        log.info("分享id: {}", shareId);
+
+        String shareStr = CipherUtils.encrypt(shareId);
+        log.info("分享id-加密后: {}", shareStr);
+
+        int decryptShareId = CipherUtils.decrypt(shareStr);
+        log.info("分享id-解密后: {}", decryptShareId);
+
+    }
+
+    // 测试url编码
+    @Test
+    public void base64UrlTest() {
+        // 然后可以使用这个 url 进行导航或请求
+        String shareStr = "KXxDsWhifz7e5FM+ug6d0w==";
+        try {
+            // 对 shareStr 进行 URL 编码
+            String encodedShareStr = URLEncoder.encode(shareStr, StandardCharsets.UTF_8.toString());
+            System.out.println("编码后的 shareStr: " + encodedShareStr);
+
+            // 构造完整的 URL
+            String baseUrl = "http://localhost:5173/#/sharelink";
+            String shareCode = "e78K";
+            String fullUrl = baseUrl + "?shareStr=" + encodedShareStr + "&shareCode=" + shareCode;
+            System.out.println("完整的 URL: " + fullUrl);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 }

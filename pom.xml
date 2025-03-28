@@ -41,6 +41,7 @@
         <springdoc-openapi>2.7.0</springdoc-openapi>
         <redis>3.4.3</redis>
         <elastic.search>7.17.28</elastic.search>
+        <hutool>5.8.36</hutool>
     </properties>
 
     <dependencyManagement>
@@ -92,6 +93,12 @@
                 <groupId>org.elasticsearch.client</groupId>
                 <artifactId>elasticsearch-rest-high-level-client</artifactId>
                 <version>${elastic.search}</version>
+            </dependency>
+            <!-- 糊涂包 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

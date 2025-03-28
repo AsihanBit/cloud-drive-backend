@@ -1,11 +1,25 @@
 server:
   port: 8080
+  # 配置 Https
+  #  port: 443
+#  ssl:
+#    key-store: classpath:certificate/keystore.p12  # 证书文件路径
+#    key-store-password: 123456  # 证书密码
+#    key-store-type: PKCS12  # 证书类型（如 PKCS12/JKS）
+#    # 可选
+#    key-alias: mycert # 生成证书时自定义的 证书别名(多个证书时可以定位)
+#  http2:
+#    enabled: true
+# 日志级别
+logging:
+  level:
+    com.netdisk.cloudserver: debug
 spring:
   application:
     name: cloud-server
   profiles:
     # 本地: local 开发: dev
-    active: dev
+    active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${cloud-drive.db.host}:3306/cloud_drive
@@ -32,16 +46,25 @@ mybatis:
     map-underscore-to-camel-case: true
 
 cloud-drive:
+  # 存储
   disk:
     storage-path: ${cloud-drive.disk.storage-path}
     file-dir: ${cloud-drive.disk.file-dir}
     temp-dir: ${cloud-drive.disk.temp-dir}
+  # 令牌
   jwt:
     user-secret-key: cloudDriveSecurityTokenKeyLong32
     # 7200000 2小时
     user-ttl: ${cloud-drive.jwt.user-ttl}
     # Authentication
     user-token-name: authorization
+  # 分享
+  share:
+    link:
+      protocol: ${cloud-drive.share.link.protocol}
+      host: ${cloud-drive.share.link.host}
+      port: ${cloud-drive.share.link.port}
+      path: ${cloud-drive.share.link.path}
 
 # ElasticSearch 文件搜索
 elastic-search:

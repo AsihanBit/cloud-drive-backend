@@ -16,6 +16,13 @@ cloud-drive:
   jwt:
     # 72000000 20小时
     user-ttl: 72000000
+  # 分享
+  share:
+    link:
+      protocol: http
+      host: localhost
+      port: 5173
+      path: /#/sharelink
 
 # ElasticSearch 文件搜索
 elastic-search:
@@ -27,11 +34,13 @@ elastic-search:
 
 # kkFileView 文件预览
 kkfileview:
+  # 后端可以使用https:8080 或 TomcatServerCustomer里的 http:8081 进行转发到 server.port(即8080)
   origin:
     protocol: http # HTTP 协议
     host: localhost  # 主机地址 或者 localhost
     port: 8080       # 端口号
     path: /user/view/file  # 路径
+  # kkFileView服务器使用 http
   preview:
     protocol: http
     host: localhost

@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserSaveSelectedItemsDTO {
-    private Integer shareId;
+    private String shareStr;
     private String extractCode;
     // 转存目标文件夹
     private Integer folderId; // pItemId 不行,只收到null?

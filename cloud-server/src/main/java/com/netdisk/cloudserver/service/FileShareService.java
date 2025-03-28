@@ -1,10 +1,11 @@
 package com.netdisk.cloudserver.service;
 
+import com.netdisk.dto.ShareResultDTO;
 import com.netdisk.dto.UserSaveSelectedItemsDTO;
 import com.netdisk.dto.UserSharedDTO;
 import com.netdisk.dto.UserSharedItemsDTO;
+import com.netdisk.enums.ShareTransferEnum;
 import com.netdisk.vo.ShareItemVO;
-import com.netdisk.vo.UserShareVO;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface FileShareService {
      *
      * @param userShareItemsDTO
      */
-    void userShareItems(UserSharedItemsDTO userShareItemsDTO);
+    ShareResultDTO userShareItems(UserSharedItemsDTO userShareItemsDTO);
 
     /**
      * 获取用户自己分享过的文件列表
@@ -61,7 +62,7 @@ public interface FileShareService {
      *
      * @param userSaveSelectedItemsDTO
      */
-    void saveSelectedItems(UserSaveSelectedItemsDTO userSaveSelectedItemsDTO);
+    ShareTransferEnum saveSelectedItems(UserSaveSelectedItemsDTO userSaveSelectedItemsDTO);
 
     /**
      * 获取外部分享的文件列表

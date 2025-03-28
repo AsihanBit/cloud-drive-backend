@@ -16,6 +16,14 @@ cloud-drive:
   jwt:
     # 7200000 2小时
     user-ttl: 7200000
+  # 分享
+  share:
+    link:
+      protocol: https
+      host: cloud.softspark.cn
+      port: 443
+      path: /#/sharelink
+
 # ElasticSearch 文件搜索
 elastic-search:
   host: elastic
@@ -33,6 +41,6 @@ kkfileview:
     path: /user/view/file  # 路径
   preview:
     protocol: http
-    host: fileview.cloud.softspark.cn  # 容器
-    port: 80  # 8012 目前是nginx转发 80
+    host: fileview.softspark.cn  # 容器
+    port: 80  # 8012 目前是nginx转发 80  443
     path: /onlinePreview

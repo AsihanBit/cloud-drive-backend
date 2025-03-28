@@ -1,12 +1,14 @@
 package com.netdisk.cloudserver.controller;
 
 import com.netdisk.cloudserver.service.FileShareService;
+import com.netdisk.dto.ShareResultDTO;
 import com.netdisk.dto.UserSaveSelectedItemsDTO;
 import com.netdisk.dto.UserSharedDTO;
 import com.netdisk.dto.UserSharedItemsDTO;
+import com.netdisk.enums.ShareTransferEnum;
 import com.netdisk.result.Result;
+import com.netdisk.utils.CipherUtils;
 import com.netdisk.vo.ShareItemVO;
-import com.netdisk.vo.UserShareVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +25,19 @@ public class FileShareController {
         this.fileShareService = fileShareService;
     }
 
+    /**
+     * 用户分享多个(单)文件
+     *
+     * @param userShareItemsDTO
+     * @return
+     */
     @PostMapping("/items")
-    public Result userShareItems(@RequestBody UserSharedItemsDTO userShareItemsDTO) {
+    public Result<ShareResultDTO> userShareItems(@RequestBody UserSharedItemsDTO userShareItemsDTO) {
         log.info("用户分享信息 : {}", userShareItemsDTO);
         // TODO 每个业务进行合法检查: 比如此处没指定itemIds 有效期 访问次数等 抛出全局异常
         // 用户分享一系列条目
-        fileShareService.userShareItems(userShareItemsDTO);
-        return Result.success();
+        ShareResultDTO shareTransferResultDTO = fileShareService.userShareItems(userShareItemsDTO);
+        return Result.success(shareTransferResultDTO);
     }
 
     /**
@@ -79,11 +87,24 @@ public class FileShareController {
     /**
      * 获取外部分享的文件列表
      *
-     * @param shareId
+     * @param shareStr
      * @return
      */
-    @GetMapping("/getOtherShareFiles/{shareId}/{pItemId}")
-    public Result<List<ShareItemVO>> getOtherShareFiles(@PathVariable Integer shareId, @PathVariable Integer pItemId) {
+    @GetMapping("/getOtherShareFiles")
+    public Result<List<ShareItemVO>> getOtherShareFiles(@RequestParam String shareStr, @RequestParam Integer pItemId) {
+
+        // 解密分享id
+        Integer shareId = null;
+        try {
+            shareId = CipherUtils.decrypt(shareStr);
+        } catch (Exception e) {
+            // 解码错误
+            log.info("解码错误");
+//            throw new RuntimeException(e);
+            // TODO 响应:错误的分享码格式
+            return Result.success();
+        }
+
         log.info(String.valueOf(shareId));
         // 根据 分享id 获取自己分享的文件列表
         if (pItemId == null) {
@@ -107,12 +128,23 @@ public class FileShareController {
     /**
      * 使用分享链接 提取码提取文件列表
      *
-     * @param shareId
+     * @param shareStr
      * @param extractCode
      * @return
      */
-    @GetMapping("/useShareLink/{shareId}/{extractCode}")
-    public Result<List<ShareItemVO>> useShareLink(@PathVariable Integer shareId, @PathVariable String extractCode) {
+    @GetMapping("/useShareLink")
+    public Result<List<ShareItemVO>> useShareLink(@RequestParam String shareStr, @RequestParam String extractCode) {
+        log.info("useShareLink: {}", String.valueOf(shareStr));
+        Integer shareId = null;
+        try {
+            shareId = CipherUtils.decrypt(shareStr);
+        } catch (Exception e) {
+            // 解码错误
+            log.info("解码错误");
+//            throw new RuntimeException(e);
+            // TODO 响应:错误的分享码格式
+            return Result.success();
+        }
         log.info(String.valueOf(shareId), extractCode);
         // TODO 前后端校验 code 格式
         List<ShareItemVO> shareItemVOList = fileShareService.useShareLink(shareId, extractCode);
@@ -129,9 +161,10 @@ public class FileShareController {
     public Result saveSelectedItems(@RequestBody UserSaveSelectedItemsDTO userSaveSelectedItemsDTO) {
         log.info(userSaveSelectedItemsDTO.toString());
         log.info(userSaveSelectedItemsDTO.getFolderId().toString());
+
         // 转存文件
-        fileShareService.saveSelectedItems(userSaveSelectedItemsDTO);
-        return Result.success();
+        ShareTransferEnum shareTransferEnum = fileShareService.saveSelectedItems(userSaveSelectedItemsDTO);
+        return Result.success(shareTransferEnum.getMessage());
     }
 
 }

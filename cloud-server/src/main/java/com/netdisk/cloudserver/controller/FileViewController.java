@@ -120,7 +120,7 @@ public class FileViewController {
     }
 
 
-    // 生成预览
+    // 生成 kkFileView 生成预 览url
     @GetMapping("/preview")
     public Result<URL> previewFile(@RequestParam("itemId") Integer itemId) throws UnsupportedEncodingException, MalformedURLException {
         log.info("previewFile");
@@ -142,7 +142,11 @@ public class FileViewController {
 //        String previewUrl = originUrl + "?fileId=" + fileId + "&fileName" + fileName + "?fullfilename=" + fileName;
 //        String previewUrl = originUrl + "?fullfilename=" + fileName;
 //        String previewUrl = originUrl + "?fullfilename=" + fileName + "&fileId=" + fileId;
-        originUrl = originUrl + "?fullfilename=" + fileName + "&fileId=" + fileId;
+        // 此处没有解码
+//        originUrl = originUrl + "?fullfilename=" + fileName + "&fileId=" + fileId;
+
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.toString());
+        originUrl = originUrl + "?fullfilename=" + encodedFileName + "&fileId=" + fileId;
 //        originUrl = originUrl + "?fileId=" + fileId;
 
 
@@ -165,39 +169,50 @@ public class FileViewController {
             @RequestParam(value = "fileId", required = false) Integer fileId,
             @RequestParam(value = "fullfilename", required = false) String fullfilename,
             HttpServletResponse response) throws Exception {
-        log.info("viewFile");
-        System.out.println("viewFile");
-        // 1 查询文件md5值获取路径 (md5以后可以写在user_files里,冗余字段)
+        log.info("viewFile-方法");
+        // 1. 查询文件信息 md5值获取路径 (md5以后可以写在user_files里,冗余字段)
         com.netdisk.entity.File fileInfo = fileService.queryFileByFileId(fileId);
+        log.info("fileInfo-参数: {}", fileInfo);
         String fileMd5 = fileInfo.getFileMd5();
         Path filePath = fileChunkUtil.getFileCompletePath(fileMd5);
-
         File file = filePath.toFile();
-//        File file = new File("E:\\cloudfile\\宇宙机器人2-1.png");
 
         // 检查存在 filePath
         if (!Files.exists(filePath)) {
             response.setStatus(HttpStatus.NOT_FOUND.value());
-//            log.error("文件不存在: {}", fileName);
+            log.error("文件不存在: {}", fullfilename);
             return;
         }
 
-        // ========= 开始测试 =========
+        // 2. 获取文件扩展名和 MIME 类型
         // 获取文件扩展名
         String extension = FileUtils.getFileExtension(fullfilename);
-
         // 设置 Content-Type
         String contentType = FileUtils.getContentType(fullfilename);
         response.setContentType(contentType);
 
-        // 1. 对文件名进行 URL 编码（用于 Content-Disposition）
+        // 3. 设置 Content-Disposition（图片 inline，其他 attachment）
+        // 对文件名进行 URL 编码（用于 Content-Disposition）
         String encodedFilename = URLEncoder.encode(fullfilename, StandardCharsets.UTF_8)
                 .replaceAll("\\+", "%20");  // 避免空格被编码成 '+'
-        // 2. 设置响应头
-        response.setCharacterEncoding("utf-8");
-//        response.setContentType("application/octet-stream");
-        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFilename);
+        // 设置响应头 根据文件类型设置 Content-Disposition
+        if (contentType.startsWith("image/")) {
+            response.setHeader("Content-Disposition", "inline; filename*=UTF-8''" + encodedFilename);
+        } else {
+            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFilename);
+        }
 
+//        response.setCharacterEncoding("utf-8");
+//        response.setHeader("Content-Security-Policy", "upgrade-insecure-requests");
+
+        // 4. 传输文件流（二进制，不修改数据）
+        try (InputStream inputStream = Files.newInputStream(file.toPath());
+             OutputStream outputStream = response.getOutputStream()) {
+            inputStream.transferTo(outputStream);
+        } catch (IOException e) {
+            log.error("文件下载失败: {}", e.getMessage());
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
 
         // ========== 原来的 开始 ==========
         // 2 对文件名进行URL编码
@@ -205,27 +220,39 @@ public class FileViewController {
 ////                .filename(fileName, StandardCharsets.UTF_8)
 //                .build()
 //                .toString();
-        // 3 设置响应头
-//        response.setCharacterEncoding("utf-8");
-//        response.setContentType("application/octet-stream");
-//        response.setHeader("Content-Disposition", encodedFilename);
-        // ========== 原来的 结束 ==========
+
+//        if (isImageFile(extension)) {
+//            log.info("是图片格式 Content-Disposition:inline");
+//            response.setHeader("Content-Disposition", "inline; filename*=UTF-8''" + encodedFilename);
+//        } else {
+//            log.info("是附件格式 Content-Disposition:attachment");
+//            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFilename);
+//        }
 
         // 4 将文件内容写入响应流
         // Files.newInputStream(filePath)
-        try (InputStream inputStream = new FileInputStream(file);
-             OutputStream outputStream = response.getOutputStream()) {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-        } catch (IOException e) {
-            log.error("文件下载失败: {}", e.getMessage());
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        }
+//        try (InputStream inputStream = new FileInputStream(file);
+//             OutputStream outputStream = response.getOutputStream()) {
+//            byte[] buffer = new byte[1024];
+//            int bytesRead;
+//            while ((bytesRead = inputStream.read(buffer)) != -1) {
+//                outputStream.write(buffer, 0, bytesRead);
+//            }
+//        } catch (IOException e) {
+//            log.error("文件下载失败: {}", e.getMessage());
+//            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+//        }
+        // ========== 原来的 结束 ==========
+    }
 
-
+    private boolean isImageFile(String extension) {
+        return extension != null && (
+                extension.equalsIgnoreCase("jpg") ||
+                        extension.equalsIgnoreCase("jpeg") ||
+                        extension.equalsIgnoreCase("png") ||
+                        extension.equalsIgnoreCase("gif") ||
+                        extension.equalsIgnoreCase("bmp")
+        );
     }
 
 }
