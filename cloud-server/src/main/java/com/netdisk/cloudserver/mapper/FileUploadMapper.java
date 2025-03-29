@@ -4,6 +4,8 @@ import com.netdisk.entity.File;
 import com.netdisk.entity.UserFiles;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
 public interface FileUploadMapper {
     /**
@@ -11,7 +13,7 @@ public interface FileUploadMapper {
      *
      * @param userFile
      */
-    void insertUserFile(UserFiles userFile);
+    Integer insertUserFile(UserFiles userFile);
 
     /**
      * file 中存储新文件信息
@@ -27,4 +29,6 @@ public interface FileUploadMapper {
      * @return
      */
     Short getPIdDirectoryLevel(Integer targetPathId);
+
+
 }

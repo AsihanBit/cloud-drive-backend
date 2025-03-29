@@ -1,11 +1,14 @@
 package com.netdisk.cloudserver.controller.user;
 
+import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.service.UserService;
 import com.netdisk.constant.MessageConstant;
 import com.netdisk.dto.UserLoginDTO;
 import com.netdisk.dto.UserRegisterDTO;
 import com.netdisk.entity.User;
+import com.netdisk.entity.UserFiles;
 import com.netdisk.result.Result;
+import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.utils.JwtUtil;
 import com.netdisk.vo.UserLoginVO;
 import io.jsonwebtoken.Claims;
@@ -18,6 +21,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Tag(name = "用户接口")
 @RestController
 @RequestMapping("/user/user")
@@ -27,7 +36,10 @@ public class UserController {
     private UserService userService;
     private JwtUtil jwtUtil;
 
-    public UserController(UserService userService, JwtUtil jwtUtil) {
+
+    public UserController(
+            UserService userService,
+            JwtUtil jwtUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
@@ -73,4 +85,6 @@ public class UserController {
         userService.register(userRegisterDTO);
         return Result.success(MessageConstant.REGISTER_SUCCESS);
     }
+
+
 }

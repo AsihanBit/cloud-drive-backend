@@ -206,6 +206,9 @@ public class FileChunkUtil {
                 // 注:这里返回 MergeFileResult 的话,不会每次合并都会输出log.info,只会输出一次,神奇
             }
 
+            // 可选：删除空的临时目录
+            Files.deleteIfExists(completeTempDir);
+
             // 计算合并后文件的 MD5 值
             String md5 = calculateFileMD5(filePath);
             // 计算合并后文件的字节大小

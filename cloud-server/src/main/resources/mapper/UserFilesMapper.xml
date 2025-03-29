@@ -53,4 +53,19 @@
     </select>
 
 
+    <!-- 批量增加用户条目 -->
+    <insert id="batchInsertItems" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="itemId">
+        insert into user_files (
+        user_id, item_name, item_type, p_id, directory_level,
+        file_id, file_size, file_cover, file_extension,
+        upload_time, update_time, recycle_status
+        ) values
+        <foreach collection="itemList" item="item" separator=",">
+            (
+            #{item.userId}, #{item.itemName}, #{item.itemType}, #{item.pId}, #{item.directoryLevel},
+            #{item.fileId}, #{item.fileSize}, #{item.fileCover}, #{item.fileExtension},
+            #{item.upLoadTime}, #{item.updateTime}, #{item.recycleStatus}
+            )
+        </foreach>
+    </insert>
 </mapper>

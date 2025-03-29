@@ -26,6 +26,12 @@
             <artifactId>cloud-pojo</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- 循环依赖了 -->
+        <!--        <dependency>-->
+        <!--            <groupId>com.netdisk</groupId>-->
+        <!--            <artifactId>cloud-server</artifactId>-->
+        <!--            <version>0.0.1-SNAPSHOT</version>-->
+        <!--        </dependency>-->
         <!-- 父项目模块管理 -->
         <dependency>
             <groupId>org.projectlombok</groupId>

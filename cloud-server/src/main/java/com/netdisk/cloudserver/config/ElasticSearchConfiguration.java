@@ -1,6 +1,7 @@
 package com.netdisk.cloudserver.config;
 
 import com.netdisk.properties.ElasticSearchProperties;
+import com.netdisk.utils.ElasticSearchUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -9,6 +10,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,7 @@ public class ElasticSearchConfiguration {
         this.elasticSearchProperties = elasticSearchProperties;
     }
 
+    // TODO 'org.elasticsearch.client.RestHighLevelClient' 已弃用
     @Bean
     public RestHighLevelClient restHighLevelClient() {
         // 创建认证信息
@@ -37,5 +40,13 @@ public class ElasticSearchConfiguration {
                         elasticSearchProperties.getScheme()) // Elasticsearch 地址和端口
         ).setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
         return new RestHighLevelClient(builder);
+    }
+
+
+    // 也可以直接 Utils里@Component
+    @Bean
+    @ConditionalOnMissingBean
+    public ElasticSearchUtils elasticSearchUtils(RestHighLevelClient restHighLevelClient) {
+        return new ElasticSearchUtils(restHighLevelClient);
     }
 }

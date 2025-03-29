@@ -1,14 +1,11 @@
 package com.netdisk.utils;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * 初始用户信息
+ */
 @Data
-@AllArgsConstructor
 public class UserInitializer {
-
-    public void insertDefaultFiles(Integer userId) {
-
-    }
 
 }

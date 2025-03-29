@@ -8,6 +8,7 @@ import com.netdisk.dto.FileExistenceCheckDTO;
 import com.netdisk.entity.File;
 import com.netdisk.entity.MergeFileResult;
 import com.netdisk.entity.UserFiles;
+import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.utils.FileChunkUtil;
 import com.netdisk.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +26,17 @@ public class FileUploadServiceImpl implements FileUploadService {
     private FileUploadMapper fileUploadMapper;
     private FileChunkUtil fileChunkUtil;
     private RedisUtil redisUtil;
+    private ElasticSearchUtils elasticSearchUtils;
 
-    public FileUploadServiceImpl(FileUploadMapper fileUploadMapper, FileChunkUtil fileChunkUtil, RedisUtil redisUtil) {
+    public FileUploadServiceImpl(
+            FileUploadMapper fileUploadMapper,
+            FileChunkUtil fileChunkUtil,
+            RedisUtil redisUtil,
+            ElasticSearchUtils elasticSearchUtils) {
         this.fileUploadMapper = fileUploadMapper;
         this.fileChunkUtil = fileChunkUtil;
         this.redisUtil = redisUtil;
+        this.elasticSearchUtils = elasticSearchUtils;
     }
 
     /**
@@ -75,7 +82,13 @@ public class FileUploadServiceImpl implements FileUploadService {
         // 设置用户的文件扩展名
         String fileExtension = userFile.generateFileExtension();
         userFile.setFileExtension(fileExtension);
-        fileUploadMapper.insertUserFile(userFile);
+        Integer affectedRow = fileUploadMapper.insertUserFile(userFile);
+        log.info("受影响的行数:{}", affectedRow);
+        log.info("用户新增条目itemId:{}", userFile.getItemId());
+
+        // 保存至 ElasticSearch
+        boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userFile);
+
 
     }
 
@@ -186,6 +199,9 @@ public class FileUploadServiceImpl implements FileUploadService {
 
             // user_file表中创建用户和文件的关联信息
             fileUploadMapper.insertUserFile(userNewFile);
+
+            // 保存至 ElasticSearch
+            boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFile);
 
             // 清除分片redis
             redisUtil.deleteAllChunk(userId, chunkUploadDTO.getFileHash());

@@ -30,7 +30,7 @@ elastic-search:
   port: 9200
   scheme: http
   username: elastic
-  password: elastic123
+  password: mnelastic123
 
 # kkFileView 文件预览
 kkfileview:

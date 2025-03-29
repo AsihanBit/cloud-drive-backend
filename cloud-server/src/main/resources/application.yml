@@ -19,7 +19,7 @@ spring:
     name: cloud-server
   profiles:
     # 本地: local 开发: dev
-    active: local
+    active: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${cloud-drive.db.host}:3306/cloud_drive

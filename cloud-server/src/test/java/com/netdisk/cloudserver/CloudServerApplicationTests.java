@@ -8,6 +8,8 @@ import com.netdisk.entity.UserFiles;
 import com.netdisk.exception.FileChunkException;
 import com.netdisk.properties.DiskProperties;
 import com.netdisk.utils.CipherUtils;
+import com.netdisk.utils.ElasticSearchUtils;
+import com.netdisk.utils.UserInitializer;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -48,7 +50,11 @@ class CloudServerApplicationTests {
     @Autowired
     private UserFilesMapper userFilesMapper;
 
+    private ElasticSearchUtils elasticSearchUtils;
+
 //    private CipherUtils cipherUtils;
+
+    private UserInitializer userInitializer;
 
 
     @Test
@@ -122,7 +128,6 @@ class CloudServerApplicationTests {
         // 配置 JSONUtil 忽略 null 字段
         JSONConfig config = JSONConfig.create().setIgnoreNullValue(true);
 
-
         // 1. 请求对象
         BulkRequest request = new BulkRequest();
         // 2. 请求参数
@@ -170,5 +175,11 @@ class CloudServerApplicationTests {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+    }
+
+    // 测试初始化用户示例文档
+    @Test
+    public void initialUserFiles() {
+//        userInitializer.insertDefaultFiles(14);
     }
 }

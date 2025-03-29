@@ -5,6 +5,7 @@ import com.netdisk.cloudserver.service.UserFilesService;
 import com.netdisk.context.BaseContext;
 import com.netdisk.dto.CreateFolderDTO;
 import com.netdisk.entity.UserFiles;
+import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.vo.UserItemsVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +20,12 @@ public class UserFilesServiceImpl implements UserFilesService {
 
     private static final Logger log = LoggerFactory.getLogger(UserFilesServiceImpl.class);
     private UserFilesMapper userFilesMapper;
+    private ElasticSearchUtils elasticSearchUtils;
 
-    public UserFilesServiceImpl(UserFilesMapper userFilesMapper) {
+
+    public UserFilesServiceImpl(UserFilesMapper userFilesMapper, ElasticSearchUtils elasticSearchUtils) {
         this.userFilesMapper = userFilesMapper;
+        this.elasticSearchUtils = elasticSearchUtils;
     }
 
     /**
@@ -70,13 +74,17 @@ public class UserFilesServiceImpl implements UserFilesService {
             log.info("用户删除的文件不存在");
             // 自定义异常
         }
+        // TODO 递归删除更深层级条目
+        // Mysql
         // 根据item_id删除条目, 删除操作所影响的行数
         Integer delResultItemId = userFilesMapper.deleteUserItemByItemId(userId, itemId);
         log.info("删除条目-影响行数:{}", delResultItemId);
-
         // 删除item_id这个条目的子条目
         Integer delResultPId = userFilesMapper.deleteUserItemsByPId(userId, itemId);
         log.info("删除子条目-影响行数:{}", delResultPId);
+
+        // ElasticSearch 删除条目以及子条目
+        boolean esIsDeleted = elasticSearchUtils.deleteItemAndChildren(itemId);
 
     }
 
@@ -112,6 +120,9 @@ public class UserFilesServiceImpl implements UserFilesService {
                 .recycleStatus(Short.valueOf("0"))
                 .build();
         userFilesMapper.insertNewItem(userNewFolder);
+
+        // 保存至 ElasticSearch
+        boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFolder);
     }
 
     /**

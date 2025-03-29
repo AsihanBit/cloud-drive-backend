@@ -57,4 +57,14 @@ public interface UserFilesMapper {
      * @return
      */
     List<UserFiles> selectAllUserItems();
+
+    /**
+     * 批量增加用户条目:目前只应用初始化示例文档
+     *
+     * @param itemList
+     * @return
+     */
+    // TODO 应用在转存等功能
+    Integer batchInsertItems(List<UserFiles> itemList);
+
 }
