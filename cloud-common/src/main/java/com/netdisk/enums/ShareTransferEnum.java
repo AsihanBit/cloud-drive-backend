@@ -11,7 +11,7 @@ public enum ShareTransferEnum {
     SHARE_NOT_EXIST(0, "分享不存在"),
     SHARE_TRANSFER_SUCCESS(1, "转存成功"),
     SHARE_EXTRACT_CODE_ERROR(2, "提取码错误"),
-    SHARE_TRANSFER_OWN_FOLDER(3, "不能转存到自己的文件夹"),
+    SHARE_TRANSFER_OWN_FOLDER(3, "自己的文件,无需转存到自己的空间"),
     STORAGE_LIMIT_EXCEEDED(4, "存储空间不足"),
     NETWORK_ERROR(5, "网络错误，请重试");
 
