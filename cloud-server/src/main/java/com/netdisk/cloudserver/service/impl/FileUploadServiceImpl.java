@@ -86,10 +86,13 @@ public class FileUploadServiceImpl implements FileUploadService {
         log.info("受影响的行数:{}", affectedRow);
         log.info("用户新增条目itemId:{}", userFile.getItemId());
 
-        // 保存至 ElasticSearch
-        boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userFile);
-
-
+        // 2. 保存至 ElasticSearch
+        boolean isSuccess;
+        try {
+            isSuccess = elasticSearchUtils.insertUserFilesDoc(userFile);
+        } catch (Exception e) {
+            log.error("ElasticSearch 保存失败（不影响主流程）: {}", e.getMessage());
+        }
     }
 
     /**
@@ -200,8 +203,13 @@ public class FileUploadServiceImpl implements FileUploadService {
             // user_file表中创建用户和文件的关联信息
             fileUploadMapper.insertUserFile(userNewFile);
 
-            // 保存至 ElasticSearch
-            boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFile);
+            // 2. 保存至 ElasticSearch
+            boolean isSuccess;
+            try {
+                isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFile);
+            } catch (Exception e) {
+                log.error("ElasticSearch 保存失败（不影响主流程）: {}", e.getMessage());
+            }
 
             // 清除分片redis
             redisUtil.deleteAllChunk(userId, chunkUploadDTO.getFileHash());

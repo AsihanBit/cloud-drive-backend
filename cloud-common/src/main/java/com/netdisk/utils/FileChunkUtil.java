@@ -12,6 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.*;
 import java.util.Comparator;
 import java.util.List;
@@ -135,17 +139,37 @@ public class FileChunkUtil {
 
         // 构建分片文件路径，名称为 "整个文件md5_part1_分片md5"
 //        Path chunkFilePath = chunkPath.resolve(fileHash + "_part" + chunkNumber + "_" + chunkHash);
-//        Path chunkFilePath = chunkPath.resolve("part_" + chunkNumber + "_" + chunkHash);
         Path chunkFilePath = getChunkCompletePath(fileHash, chunkHash, chunkNumber);
 
-//        Path chunkFilePath = chunkPath.resolve(chunkHash);
-
         // 存储分片到指定路径
-        try {
-            Files.copy(file.getInputStream(), chunkFilePath, StandardCopyOption.REPLACE_EXISTING);
+        /**
+         * 用的是 NIO 的“简化版”：背后其实还是使用传统的阻塞流（InputStream）
+         * file.getInputStream() 是 Servlet 容器提供的传统阻塞流（IO）
+         * Files.copy(...) 是 NIO 提供的便捷写入方式，所以这用法本质是 传统 IO + NIO 工具类混合
+         */
+//        try {
+//            Files.copy(file.getInputStream(), chunkFilePath, StandardCopyOption.REPLACE_EXISTING);
+//        } catch (IOException e) {
+//            throw new FileChunkException(MessageConstant.FAILED_TO_STORE_CHUNK);
+//        }
+
+        try (
+                // 使用 FileChannel 或 BufferedChannel 来替代 InputStream：
+                // 如果打算做断点续传、秒传、边写边合并，可以考虑升级成全量 NIO（Channel + Buffer + DirectBuffer）模式。
+                ReadableByteChannel inChannel = Channels.newChannel(file.getInputStream());
+                // 文件已存在 → 清空（truncate）文件，然后再写入
+                FileChannel outChannel = FileChannel.open(chunkFilePath, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+        ) {
+            ByteBuffer buffer = ByteBuffer.allocate(8192);
+            while (inChannel.read(buffer) != -1) {
+                buffer.flip();
+                outChannel.write(buffer);
+                buffer.clear();
+            }
         } catch (IOException e) {
             throw new FileChunkException(MessageConstant.FAILED_TO_STORE_CHUNK);
         }
+
 
     }
 
@@ -179,9 +203,9 @@ public class FileChunkUtil {
             // 检查并创建目录（包括所有必要的父目录）
             if (!Files.exists(fileDirPath)) {
                 Files.createDirectories(fileDirPath);
-                System.out.println("目录创建成功: " + fileDirPath.toString());
+                log.info("目录创建成功: {}", fileDirPath);
             } else {
-                System.out.println("目录已存在: " + fileDirPath.toString());
+                log.info("目录已存在: {}", fileDirPath);
             }
         } catch (Exception e) {
             throw new FileChunkException(MessageConstant.FAILED_TO_CREATE_SUB_DIR);
@@ -190,17 +214,36 @@ public class FileChunkUtil {
         Path filePath = fileDirPath.resolve(fileHash);
 
         // 创建或覆盖目标文件并合并分片
-        try (OutputStream outputStream = Files.newOutputStream(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (
+                // 纯IO流
+//                OutputStream outputStream = Files.newOutputStream(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+                // 纯NIO流
+                FileChannel outChannel = FileChannel.open(filePath,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.TRUNCATE_EXISTING)
+        ) {
             for (Path chunk : chunkFiles) {
-                try (InputStream inputStream = Files.newInputStream(chunk)) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
+                // 纯IO流
+//                try (InputStream inputStream = Files.newInputStream(chunk)) {
+//                    byte[] buffer = new byte[8192];
+//                    int bytesRead;
+//                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+//                        outputStream.write(buffer, 0, bytesRead);
+//                    }
+//                    // 显式调用 flush() 确保数据被写出
+//                    outputStream.flush();
+//                }
+                // 纯NIO流
+                try (FileChannel inChannel = FileChannel.open(chunk, StandardOpenOption.READ)) {
+                    // 高效传输，底层使用零拷贝（zero-copy）技术，尤其适合大文件
+                    long size = inChannel.size();
+                    long transferred = 0;
+                    while (transferred < size) {
+                        transferred += inChannel.transferTo(transferred, size - transferred, outChannel);
                     }
-                    // 显式调用 flush() 确保数据被写出
-                    outputStream.flush();
                 }
+
                 // 删除已处理的分片
                 Files.delete(chunk);
                 // 注:这里返回 MergeFileResult 的话,不会每次合并都会输出log.info,只会输出一次,神奇

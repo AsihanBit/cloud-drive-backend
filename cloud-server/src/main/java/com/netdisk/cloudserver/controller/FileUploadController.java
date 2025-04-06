@@ -7,6 +7,7 @@ import com.netdisk.context.BaseContext;
 import com.netdisk.dto.ChunkUploadDTO;
 import com.netdisk.dto.FileExistenceCheckDTO;
 import com.netdisk.entity.File;
+import com.netdisk.entity.MergeFileResult;
 import com.netdisk.result.Result;
 import com.netdisk.utils.FileChunkUtil;
 import com.netdisk.utils.RedisUtil;
@@ -139,6 +140,11 @@ public class FileUploadController {
         } else {
             log.info("分片是新文件");
         }
+        // TODO 如果全部分片都在 redis中 存在,清空redis,未合并的话,执行合并,保存es和mysql
+//        MergeFileResult mergeFileResult = fileChunkUtil.mergeChunks(fileHash);
+        // 清除分片redis
+//      如果所有分片都在:redisUtil.deleteAllChunk(userId, fileHash);
+
         return Result.success(isExist);
     }
 }
