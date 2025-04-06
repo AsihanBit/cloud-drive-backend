@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @NoArgsConstructor
 //@Component // 或者这里加@Component 或者 config里@Bean
@@ -57,6 +59,31 @@ public class RedisUtil {
         log.info("已删除文件的所有分片信息: 用户ID {}, 文件MD5 {}", userId, fileMd5);
     }
 
+    // ======================= Redis 锁相关 =======================
+
+    /**
+     * 尝试加锁
+     *
+     * @param lockKey  锁的 key
+     * @param value    锁的值，通常可以是任意标识
+     * @param timeout  锁的超时时间
+     * @param timeUnit 超时时间单位
+     * @return 是否成功获取锁
+     */
+    public boolean tryLock(String lockKey, String value, long timeout, TimeUnit timeUnit) {
+        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, value, timeout, timeUnit);
+        return Boolean.TRUE.equals(lockAcquired);
+    }
+
+    /**
+     * 释放锁
+     *
+     * @param lockKey 锁的 key
+     */
+    public void releaseLock(String lockKey) {
+        redisTemplate.delete(lockKey);
+        log.info("已释放锁: {}", lockKey);
+    }
 
     // ======================= 文件防止递归 =======================
     public void recordSavedItemId(Integer userId, Integer shareId, Integer savedItemId) {
