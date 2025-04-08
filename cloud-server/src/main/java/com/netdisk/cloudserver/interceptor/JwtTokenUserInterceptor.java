@@ -63,4 +63,6 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         }
 
     }
+
+    // TODO remove ThreadLocal
 }
