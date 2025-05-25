@@ -12,13 +12,10 @@ import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.utils.UserInitializer;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.xcontent.XContentType;
 import org.junit.jupiter.api.Test;
-import org.opentest4j.FileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Map;
 
 @SpringBootTest
 class CloudServerApplicationTests {
@@ -149,11 +144,27 @@ class CloudServerApplicationTests {
         int shareId = 246810;
         log.info("分享id: {}", shareId);
 
-        String shareStr = CipherUtils.encrypt(shareId);
+        String shareStr = CipherUtils.encryptCBC(shareId);
         log.info("分享id-加密后: {}", shareStr);
 
-        int decryptShareId = CipherUtils.decrypt(shareStr);
+        int decryptShareId = CipherUtils.decryptCBC(shareStr);
         log.info("分享id-解密后: {}", decryptShareId);
+
+
+        String shareStrCBC = CipherUtils.encryptCBC(shareId);
+        log.info("分享id-CBC加密后: {}", shareStrCBC);
+        String shareStrCBC1 = CipherUtils.encryptCBC(shareId);
+        log.info("分享id-CBC加密后1: {}", shareStrCBC1);
+        String shareStrCBC2 = CipherUtils.encryptCBC(shareId);
+        log.info("分享id-CBC加密后1: {}", shareStrCBC2);
+
+        int decryptShareIdCBC = CipherUtils.decryptCBC(shareStrCBC);
+        log.info("分享id-解密后: {}", decryptShareIdCBC);
+        int decryptShareIdCBC1 = CipherUtils.decryptCBC(shareStrCBC1);
+        log.info("分享id-解密后1: {}", decryptShareIdCBC1);
+        int decryptShareIdCBC2 = CipherUtils.decryptCBC(shareStrCBC2);
+        log.info("分享id-解密后2: {}", decryptShareIdCBC2);
+
 
     }
 

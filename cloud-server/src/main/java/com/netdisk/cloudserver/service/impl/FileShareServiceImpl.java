@@ -16,7 +16,6 @@ import com.netdisk.entity.UserFiles;
 import com.netdisk.enums.ShareExpirationEnums;
 import com.netdisk.enums.ShareTransferEnum;
 import com.netdisk.properties.ShareProperties;
-import com.netdisk.result.Result;
 import com.netdisk.utils.CipherUtils;
 import com.netdisk.utils.RedisUtil;
 import com.netdisk.utils.ShareCodeUtil;
@@ -121,7 +120,7 @@ public class FileShareServiceImpl implements FileShareService {
         String shareStr = "";
         // 加密 分享id
         try {
-            shareStr = CipherUtils.encrypt(shareId);
+            shareStr = CipherUtils.encryptCBC(shareId);
         } catch (Exception e) {
             // TODO 加密失败,可返回提示
             throw new RuntimeException(e);
@@ -302,7 +301,7 @@ public class FileShareServiceImpl implements FileShareService {
         // 解密分享id
         Integer shareId = null;
         try {
-            shareId = CipherUtils.decrypt(userSaveSelectedItemsDTO.getShareStr());
+            shareId = CipherUtils.decryptCBC(userSaveSelectedItemsDTO.getShareStr());
         } catch (Exception e) {
             // 解码错误
             log.info("解码错误");

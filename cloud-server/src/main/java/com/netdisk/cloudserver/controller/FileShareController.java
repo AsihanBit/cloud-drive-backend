@@ -96,7 +96,7 @@ public class FileShareController {
         // 解密分享id
         Integer shareId = null;
         try {
-            shareId = CipherUtils.decrypt(shareStr);
+            shareId = CipherUtils.decryptCBC(shareStr);
         } catch (Exception e) {
             // 解码错误
             log.info("解码错误");
@@ -137,7 +137,7 @@ public class FileShareController {
         log.info("useShareLink: {}", String.valueOf(shareStr));
         Integer shareId = null;
         try {
-            shareId = CipherUtils.decrypt(shareStr);
+            shareId = CipherUtils.decryptCBC(shareStr);
         } catch (Exception e) {
             // 解码错误
             log.info("解码错误");
