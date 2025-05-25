@@ -133,7 +133,7 @@ public class FileUploadController {
         // 分片存在性-本地存储式判断
 //        boolean isExist = fileChunkUtil.checkChunkExistsLS(fileHash, chunkHash, chunkNumber);
         Integer userId = BaseContext.getCurrentId();
-        boolean isExist = redisUtil.checkChunkExists(userId, fileHash, chunkNumber);
+        boolean isExist = fileChunkUtil.checkChunkExists(userId, fileHash, chunkNumber);
         if (isExist) {
             log.info("分片已存在");
             // 存储式-分片上传记录保存至 redis
@@ -157,7 +157,7 @@ public class FileUploadController {
 //                                  @RequestParam("chunkCount") Integer chunkCount,
 //                                  @RequestParam("chunkHash") String chunkHash,
 //                                  @RequestParam("fileHash") String fileHash) {
-////        log.info("文件上传接口");
+/// /        log.info("文件上传接口");
 //        log.info("整个文件哈希值: {}", fileHash);
 //        log.info("参数: {} {} {} {} {}  分片: {} / {}",
 //                file.getOriginalFilename(), file.getSize(), start, end, chunkHash, chunkNumber, chunkCount);

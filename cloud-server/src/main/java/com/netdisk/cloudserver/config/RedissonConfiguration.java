@@ -9,6 +9,7 @@ import org.redisson.config.SingleServerConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.util.StringUtils;
 
 @Configuration
@@ -31,6 +32,8 @@ public class RedissonConfiguration {
      * 自动装配
      */
     @Bean
+    // TODO 懒加载必要性检查
+    @Lazy
     RedissonClient redissonSingle() {
         Config config = new Config();
 

@@ -123,11 +123,12 @@ public class FileUploadServiceImpl implements FileUploadService {
                 chunkUploadDTO.getChunkHash());
 
         // 2. 分片信息保存至 redis
-        redisUtil.recordChunkUpload(userId, chunkUploadDTO.getFileHash(), chunkUploadDTO.getChunkNumber());
+//        redisUtil.recordChunkUpload(userId, chunkUploadDTO.getFileHash(), chunkUploadDTO.getChunkNumber());
+        fileChunkUtil.recordChunkUpload(userId, chunkUploadDTO.getFileHash(), chunkUploadDTO.getChunkNumber());
         log.info("分片:{} 保存成功", chunkUploadDTO.getChunkNumber());
 
         // 3. 判断是否所有分片已保存完毕
-        Long storedChunkCount = redisUtil.getChunkCount(userId, chunkUploadDTO.getFileHash());
+        Long storedChunkCount = fileChunkUtil.getChunkCount(userId, chunkUploadDTO.getFileHash());
         if (storedChunkCount == null) {
             log.warn("文件分片信息不存在，可能 Redis 记录失败，抛异常");
             return;
@@ -150,6 +151,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                 isLocked = lock.tryLock(0, 3, TimeUnit.MINUTES);
                 if (isLocked) {
                     log.info("触发文件合并任务：{}", chunkUploadDTO.getFileHash());
+                    boolean finalIsLocked = isLocked;
                     executorService.submit(() -> {
                         try {
                             {
@@ -240,7 +242,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                                 }
 
                                 // 清除分片redis
-                                redisUtil.deleteAllChunk(userId, chunkUploadDTO.getFileHash());
+                                fileChunkUtil.deleteAllChunk(userId, chunkUploadDTO.getFileHash());
                                 log.info("文件合并完成并清理缓存: {}", chunkUploadDTO.getFileHash());
                                 // 清除存储的所有分片文件 (可以紧接着在保存file后执行) (也可以在mergeChunks完成)
                                 fileChunkUtil.deleteAllChunks(chunkUploadDTO.getFileHash());
@@ -251,10 +253,9 @@ public class FileUploadServiceImpl implements FileUploadService {
                             log.error("合并任务执行失败: {}", e.getMessage(), e);
                         } finally {
                             // Redisson 安全释放锁
-                            if (lock.isHeldByCurrentThread()) {
+                            if (finalIsLocked && lock.isHeldByCurrentThread()) {
                                 lock.unlock();
                                 log.info("Redisson已释放锁");
-
                             }
                         }
 

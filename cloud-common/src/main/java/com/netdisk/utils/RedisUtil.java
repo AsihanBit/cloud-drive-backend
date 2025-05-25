@@ -1,5 +1,6 @@
 package com.netdisk.utils;
 
+import com.netdisk.constant.RedisConstant;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +16,59 @@ public class RedisUtil {
 
     private RedisTemplate redisTemplate;
 
+    /**
+     * 构造方法注入 RedisTemplate
+     *
+     * @param redisTemplate Redis模板
+     */
     public RedisUtil(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
+
+    // ======================= 只专注Redis自身 =======================
+
+    /**
+     * 往 Set 集合中添加元素
+     *
+     * @param key   键
+     * @param value 值
+     * @return 添加成功的数量
+     */
+    public Long addToSet(String key, Object value) {
+        return redisTemplate.opsForSet().add(key, value);
+    }
+
+    /**
+     * 判断元素是否是集合的成员
+     *
+     * @param key   键
+     * @param value 值
+     * @return 是否为成员
+     */
+    public Boolean isSetMember(String key, Object value) {
+        return redisTemplate.opsForSet().isMember(key, value);
+    }
+
+    /**
+     * 获取集合的大小
+     *
+     * @param key 键
+     * @return 集合大小
+     */
+    public Long getSetSize(String key) {
+        return redisTemplate.opsForSet().size(key);
+    }
+
+    /**
+     * 删除指定的 key
+     *
+     * @param key 键
+     * @return 成功返回 true, 失败返回 false
+     */
+    public Boolean delete(String key) {
+        return redisTemplate.delete(key);
+    }
+
 
     // ======================= 文件分片 =======================
 
@@ -27,6 +78,7 @@ public class RedisUtil {
     public void recordChunkUpload(Integer userId, String fileMd5, Integer chunkNumber) {
         // 构造 Redis 集合的 key
         String key = "file_chunk:" + userId + ":" + fileMd5;
+//        String key = StringUtils.buildKey(RedisConstant.FILE_CHUNK, userId.toString(), fileMd5);
         // 将分片位置下标添加到集合中
         redisTemplate.opsForSet().add(key, chunkNumber);
         log.info("已记录分片信息: 用户ID {}, 文件MD5 {}, 分片位置 {}", userId, fileMd5, chunkNumber);
@@ -100,6 +152,5 @@ public class RedisUtil {
         String key = "savedItemIds:" + userId + ":" + shareId;
         redisTemplate.delete(key);
     }
-
 
 }
