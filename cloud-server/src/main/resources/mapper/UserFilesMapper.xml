@@ -9,7 +9,7 @@
         select *
         from user_files
         where p_id = #{itemPId}
-          and user_id = #{userId}
+        and user_id = #{userId}
     </select>
 
     <!-- 根据 item_id 检查用户条目 -->
@@ -17,7 +17,7 @@
         select *
         from user_files
         where item_id = #{itemId}
-          and user_id = #{userId}
+        and user_id = #{userId}
     </select>
 
     <!-- 根据item_id删除条目 -->
@@ -25,7 +25,7 @@
         delete
         from user_files
         where item_id = #{itemId}
-          and user_id = #{userId}
+        and user_id = #{userId}
     </delete>
 
     <!-- 删除item_id这个条目的子条目 -->
@@ -35,14 +35,15 @@
         where p_id = #{itemPId}
     </delete>
 
+
     <!-- 新增用户条目 -->
     <insert id="insertNewItem" useGeneratedKeys="true" keyProperty="itemId">
         insert into user_files (user_id, item_name, item_type, p_id, directory_level,
-                                file_id, file_size, file_cover, file_extension,
-                                upload_time, update_time, recycle_status)
+        file_id, file_size, file_cover, file_extension,
+        upload_time, update_time, recycle_status)
         VALUES (#{userId}, #{itemName}, #{itemType}, #{pId}, #{directoryLevel},
-                #{fileId}, #{fileSize}, #{fileCover}, #{fileExtension},
-                #{upLoadTime}, #{updateTime}, #{recycleStatus})
+        #{fileId}, #{fileSize}, #{fileCover}, #{fileExtension},
+        #{upLoadTime}, #{updateTime}, #{recycleStatus})
     </insert>
 
 
@@ -51,7 +52,6 @@
         select *
         from user_files
     </select>
-
 
     <!-- 批量增加用户条目 -->
     <insert id="batchInsertItems" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="itemId">
@@ -68,4 +68,23 @@
             )
         </foreach>
     </insert>
+
+    <!-- 查询一个用户所有条目 -->
+    <select id="selectUserItemsByUserId" resultType="com.netdisk.entity.UserFiles">
+        select *
+        from user_files
+        where user_id = #{userId}
+    </select>
+
+    <!-- 启用禁用用户条目 -->
+    <update id="updateBanStatus">
+        update user_files set ban_status = #{banStatus} where item_id = #{itemId}
+    </update>
+
+    <!-- 管理员根据 item_id 删除条目 -->
+    <delete id="adminDeleteUserFileByItemId">
+        delete
+        from user_files
+        where item_id = #{itemId}
+    </delete>
 </mapper>

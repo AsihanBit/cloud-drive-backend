@@ -87,7 +87,8 @@ public class FileUploadServiceImpl implements FileUploadService {
                 .fileCover(file.getFileCover())
                 .upLoadTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
-                .recycleStatus(Short.valueOf("0"))
+                .recycleStatus(Short.valueOf("1"))
+                .banStatus(Short.valueOf("1"))
                 .build();
         // 设置用户的文件扩展名
         String fileExtension = userFile.generateFileExtension();

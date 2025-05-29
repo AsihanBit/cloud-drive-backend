@@ -21,6 +21,9 @@ public class MessageConstant {
     public static final String FILE_UPLOAD_SUCCESS = "文件上传成功！";
     public static final String FILE_UPLOAD_FAILED = "文件上传失败！";
 
+    // 文件下载相关提示
+    public static final String FILE_STATUS_LOCKED = "文件被禁用";
+
 
     // 文件分片相关异常消息
     public static final String INVALID_INPUT_PARAMETERS = "异常输入: 文件或文件哈希值错误"; // 异常输入: 文件,哈希值为空或长度小于2

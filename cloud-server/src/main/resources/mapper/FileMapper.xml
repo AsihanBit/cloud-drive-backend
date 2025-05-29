@@ -3,11 +3,28 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.netdisk.cloudserver.mapper.FileMapper">
-
     <!-- 表 file 中根据 file_id 查询文件 -->
     <select id="selectFileByFileId" resultType="com.netdisk.entity.File">
         select *
         from file
         where file_id = #{fileId}
     </select>
+    <!-- 查询所有文件 -->
+    <select id="selectAllFiles" resultType="com.netdisk.entity.File">
+        select *
+        from file
+    </select>
+    <!-- id删除文件 -->
+    <delete id="deleteFileByFileId">
+        delete
+        from file
+        where file_id = #{fileId}
+    </delete>
+
+    <!-- 启用禁用文件 -->
+    <update id="updateFileBanStatus">
+        update file
+        set ban_status = #{banStatus}
+        where file_id = #{fileId}
+    </update>
 </mapper>

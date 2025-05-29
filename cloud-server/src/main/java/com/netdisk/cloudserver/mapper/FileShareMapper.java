@@ -1,5 +1,6 @@
 package com.netdisk.cloudserver.mapper;
 
+import com.netdisk.dto.ShareBanStatusDTO;
 import com.netdisk.dto.UserSharedDTO;
 import com.netdisk.entity.Share;
 import com.netdisk.entity.ShareItem;
@@ -115,4 +116,50 @@ public interface FileShareMapper {
     List<ShareItem> getShareItemsByShareItemIds(List<Integer> selectedShareItemIds);
 
 
+    /**
+     * 查询所有分享
+     *
+     * @return
+     */
+    List<Share> selectAllShare();
+
+    /**
+     * id查询分享
+     *
+     * @return
+     */
+    Share selectShareById(Integer shareId);
+
+    /**
+     * 用户id搜索分享
+     *
+     * @param userId
+     * @return
+     */
+    List<Share> selectShareByUserId(Integer userId);
+
+    /**
+     * id查询分享的每个条目
+     *
+     * @param shareId
+     * @return
+     */
+    List<ShareItem> getShareItemsByShareId(Integer shareId);
+
+    /**
+     * 管理员 重置分享的 过期时间 访问限制
+     *
+     * @param shareId
+     * @param expireType
+     * @param expireTime
+     * @param accessLimit
+     */
+    void adminResetShareExpire(Integer shareId, Short expireType, LocalDateTime expireTime, Integer accessLimit);
+
+    /**
+     * 启用禁用分享
+     *
+     * @param shareBanStatusDTO
+     */
+    void updateShareBanStatus(ShareBanStatusDTO shareBanStatusDTO);
 }

@@ -1,11 +1,11 @@
 package com.netdisk.cloudserver.service;
 
-import com.netdisk.dto.ShareResultDTO;
-import com.netdisk.dto.UserSaveSelectedItemsDTO;
-import com.netdisk.dto.UserSharedDTO;
-import com.netdisk.dto.UserSharedItemsDTO;
+import com.netdisk.dto.*;
+import com.netdisk.entity.Share;
+import com.netdisk.entity.ShareItem;
 import com.netdisk.enums.ShareTransferEnum;
 import com.netdisk.vo.ShareItemVO;
+import com.netdisk.vo.ShareVO;
 
 import java.util.List;
 
@@ -72,4 +72,57 @@ public interface FileShareService {
      * @return
      */
     List<ShareItemVO> getOtherShareFiles(Integer shareId, Integer pItemId);
+
+    /**
+     * 查询所有分享
+     *
+     * @return
+     */
+    List<ShareVO> getAllShare();
+
+    /**
+     * id查询分享
+     *
+     * @return
+     */
+    Share getShareById(Integer shareId);
+
+    /**
+     * 根据用户id获取分享列表
+     *
+     * @param userId
+     * @return
+     */
+    List<Share> getShareByUserId(Integer userId);
+
+    /**
+     * id查询分享的每个条目
+     *
+     * @param shareId
+     * @return
+     */
+    List<ShareItem> getShareItemsByShareId(Integer shareId);
+
+    /**
+     * id删除分享
+     *
+     * @param shareId
+     */
+    void deleteShareByShareId(Integer shareId);
+
+    /**
+     * 重置分享的 过期时间 访问限制
+     *
+     * @param shareId
+     * @param expireType
+     * @param accessLimit
+     */
+    void adminResetShareExpire(Integer shareId, Short expireType, Integer accessLimit);
+
+    /**
+     * 启用禁用分享
+     *
+     * @param shareBanStatusDTO
+     */
+    void updateShareBanStatus(ShareBanStatusDTO shareBanStatusDTO);
 }

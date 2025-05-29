@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserItemsVO {
     private Integer itemId;
+    private Integer userId;
     private String itemName;
     private Short itemType;
     //    @JsonProperty("pId") // 显式指定 JSON 字段名为 pId
@@ -26,5 +27,9 @@ public class UserItemsVO {
     private Long fileSize;
     private String fileExtension;
 
+    //    private LocalDateTime upLoadTime;
     private LocalDateTime updateTime;
+
+    //    private Short recycleStatus;
+    private Short banStatus;
 }

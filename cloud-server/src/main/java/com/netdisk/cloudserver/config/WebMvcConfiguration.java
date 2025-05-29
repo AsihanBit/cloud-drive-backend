@@ -38,7 +38,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
 //                .excludePathPatterns("/user/file/chunkDownload")
 //                .excludePathPatterns("/user/file/downloadTest")
                 .excludePathPatterns("/user/view/file")
-                .excludePathPatterns("/user/view/filetest");
+                .excludePathPatterns("/user/view/filetest")
+                .excludePathPatterns("/admin/**");
 //                .excludePathPatterns("/user/account/register");
     }
 

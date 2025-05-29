@@ -1,18 +1,17 @@
-package com.netdisk.entity;
+package com.netdisk.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class File {
+public class FileVO {
     private Integer fileId;
     private String fileMd5;
     private String storageLocation;

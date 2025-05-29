@@ -6,9 +6,9 @@
 
     <insert id="userRegister" useGeneratedKeys="true" keyProperty="userId">
         insert into user (username, password, nickname, age, gender, phone, email, vip, avatar,
-                          used_space, total_space, register_time, last_login_time, status)
+        used_space, total_space, register_time, last_login_time, status)
         values (#{username}, #{password}, #{nickname}, #{age}, #{gender}, #{phone}, #{email}, #{vip}, #{avatar},
-                #{usedSpace}, #{totalSpace}, #{registerTime}, #{lastLoginTime}, #{status})
+        #{usedSpace}, #{totalSpace}, #{registerTime}, #{lastLoginTime}, #{status})
     </insert>
     <select id="queryUserByUsername" resultType="com.netdisk.entity.User">
         select *
@@ -22,4 +22,84 @@
         from user
         where user_id = #{userId}
     </select>
+
+    <!-- 查询用户列表 -->
+    <select id="selectUserInfoList" resultType="com.netdisk.entity.User">
+        select *
+        from user
+    </select>
+
+    <!-- 添加用户 -->
+    <insert id="insertUser">
+        insert into user (
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="username != null">username,</if>
+            <if test="password != null">password,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="age != null">age,</if>
+            <if test="gender != null">gender,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="vip != null">vip,</if>
+            <if test="avatar != null">avatar,</if>
+            <if test="usedSpace != null">used_space,</if>
+            <if test="totalSpace != null">total_space,</if>
+            <if test="registerTime != null">register_time,</if>
+            <if test="lastLoginTime != null">last_login_time,</if>
+            <if test="status != null">status,</if>
+        </trim>
+        )
+        values (
+        <trim prefix="" suffix="" suffixOverrides=",">
+            <if test="username != null">#{username},</if>
+            <if test="password != null">#{password},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="age != null">#{age},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="vip != null">#{vip},</if>
+            <if test="avatar != null">#{avatar},</if>
+            <if test="usedSpace != null">#{usedSpace},</if>
+            <if test="totalSpace != null">#{totalSpace},</if>
+            <if test="registerTime != null">#{registerTime},</if>
+            <if test="lastLoginTime != null">#{lastLoginTime},</if>
+            <if test="status != null">#{status},</if>
+        </trim>
+        )
+    </insert>
+
+    <!-- 修改账户状态 -->
+    <update id="updateAccountStatus">
+        update user
+        set status = #{status}
+        where user_id = #{userId}
+    </update>
+    <!-- 删除用户账户 -->
+    <delete id="deleteUserAccountByUserId">
+        delete
+        from user
+        where user_id = #{userId}
+    </delete>
+    <!-- 修改用户信息 -->
+    <update id="updateUser">
+        update user
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="vip != null">vip = #{vip},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="usedSpace != null">used_space = #{usedSpace},</if>
+            <if test="totalSpace != null">total_space = #{totalSpace},</if>
+            <if test="registerTime != null">register_time = #{registerTime},</if>
+            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
 </mapper>

@@ -1,6 +1,7 @@
 package com.netdisk.cloudserver.service;
 
 import com.netdisk.dto.CreateFolderDTO;
+import com.netdisk.dto.UserFileStatusDTO;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.vo.UserItemsVO;
 
@@ -13,7 +14,7 @@ public interface UserFilesService {
      * @param itemPId
      * @return
      */
-    List<UserItemsVO> getUserItems(Integer itemPId);
+    List<UserItemsVO> getUserItemsByPId(Integer itemPId);
 
     /**
      * 用户根据 item_id 删除条目
@@ -36,4 +37,33 @@ public interface UserFilesService {
      * @return
      */
     UserFiles checkItemOwnership(Integer itemId);
+
+    /**
+     * 查询一个用户所有条目
+     *
+     * @param userId
+     * @return
+     */
+    List<UserItemsVO> getUserItemsByUserId(Integer userId);
+
+    /**
+     * 查询所有用户条目
+     *
+     * @return
+     */
+    List<UserItemsVO> getUserItems();
+
+    /**
+     * 启用禁用用户条目
+     *
+     * @param userFileStatusDTO
+     */
+    void updateBanStatus(UserFileStatusDTO userFileStatusDTO);
+
+    /**
+     * 管理员根据 item_id 删除条目
+     *
+     * @param itemId
+     */
+    void adminDeleteUserFileByItemId(Integer itemId);
 }

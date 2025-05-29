@@ -67,4 +67,25 @@ public interface UserFilesMapper {
     // TODO 应用在转存等功能
     Integer batchInsertItems(List<UserFiles> itemList);
 
+    /**
+     * 查询一个用户所有条目
+     *
+     * @return
+     */
+    List<UserFiles> selectUserItemsByUserId(Integer userId);
+
+    /**
+     * 启用禁用用户条目
+     *
+     * @param itemId
+     * @param banStatus
+     */
+    void updateBanStatus(Integer itemId, Short banStatus);
+
+    /**
+     * 管理员根据 item_id 删除条目
+     *
+     * @param itemId
+     */
+    void adminDeleteUserFileByItemId(Integer itemId);
 }

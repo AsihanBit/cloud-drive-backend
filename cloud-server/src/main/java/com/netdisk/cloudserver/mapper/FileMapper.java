@@ -1,7 +1,10 @@
 package com.netdisk.cloudserver.mapper;
 
+import com.netdisk.dto.FileBanStatusDTO;
 import com.netdisk.entity.File;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface FileMapper {
@@ -12,4 +15,25 @@ public interface FileMapper {
      * @return
      */
     File selectFileByFileId(Integer fileId);
+
+    /**
+     * 查询所有文件
+     *
+     * @return
+     */
+    List<File> selectAllFiles();
+
+    /**
+     * id删除文件
+     *
+     * @param fileId
+     */
+    void deleteFileByFileId(Integer fileId);
+
+    /**
+     * 启用禁用文件
+     *
+     * @param fileBanStatusDTO
+     */
+    void updateFileBanStatus(FileBanStatusDTO fileBanStatusDTO);
 }

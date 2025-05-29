@@ -1,7 +1,12 @@
 package com.netdisk.cloudserver.mapper;
 
+import com.netdisk.dto.UserAccountStatusDTO;
+import com.netdisk.dto.UserDTO;
+import com.netdisk.dto.UserRegisterDTO;
 import com.netdisk.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -27,4 +32,39 @@ public interface UserMapper {
      * @return
      */
     User selectUserByUserId(Integer userId);
+
+    /**
+     * 查询用户列表
+     *
+     * @return
+     */
+    List<User> selectUserInfoList();
+
+    /**
+     * 添加用户
+     *
+     * @param userRegisterDTO
+     */
+    void insertUser(UserRegisterDTO userRegisterDTO);
+
+    /**
+     * 修改账户状态
+     *
+     * @param userAccountStatusDTO
+     */
+    void updateAccountStatus(UserAccountStatusDTO userAccountStatusDTO);
+
+    /**
+     * 删除用户账户
+     *
+     * @param userId
+     */
+    void deleteUserAccountByUserId(Integer userId);
+
+    /**
+     * 修改用户信息
+     *
+     * @param userDTO
+     */
+    void updateUser(UserDTO userDTO);
 }

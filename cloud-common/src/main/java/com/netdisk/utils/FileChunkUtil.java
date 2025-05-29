@@ -1,6 +1,7 @@
 package com.netdisk.utils;
 
 import com.netdisk.constant.MessageConstant;
+import com.netdisk.constant.RedisConstant;
 import com.netdisk.entity.MergeFileResult;
 import com.netdisk.exception.FileChunkException;
 import lombok.AllArgsConstructor;
@@ -31,12 +32,52 @@ public class FileChunkUtil {
     private String fileDir;
     private String tempDir;
 
+    private RedisUtil redisUtil;
 
     /**
      * 分片保存时:  storagePath/tempDir/ 整文件md5 / part_1_分片md5
      * 检查存在时:  先拿到 [getChunkDirPath] storagePath/tempDir/整文件md5   再取 _ [2]
      *
      */
+
+    // ======================= Redis交互 =======================
+
+    /**
+     * 保存分片信息至 redis
+     */
+    public void recordChunkUpload(Integer userId, String fileMd5, Integer chunkNumber) {
+        // 构造 Redis 集合的 key
+        String key = StringUtils.buildKey(RedisConstant.FILE_CHUNK, userId.toString(), fileMd5);
+        redisUtil.addToSet(key, chunkNumber);
+        log.info("已记录分片信息: 用户ID {}, 文件MD5 {}, 分片位置 {}", userId, fileMd5, chunkNumber);
+    }
+
+    /**
+     * 检查用户文件的某个位置下标分片是否存在
+     */
+    public boolean checkChunkExists(Integer userId, String fileMd5, Integer chunkNumber) {
+        String key = StringUtils.buildKey(RedisConstant.FILE_CHUNK, userId.toString(), fileMd5);
+        return redisUtil.isSetMember(key, chunkNumber);
+    }
+
+    /**
+     * 获取文件的所有分片位置的数量
+     */
+    public Long getChunkCount(Integer userId, String fileMd5) {
+        String key = StringUtils.buildKey(RedisConstant.FILE_CHUNK, userId.toString(), fileMd5);
+        return redisUtil.getSetSize(key);
+    }
+
+    /**
+     * 删除文件的所有分片信息
+     */
+    public void deleteAllChunk(Integer userId, String fileMd5) {
+        String key = StringUtils.buildKey(RedisConstant.FILE_CHUNK, userId.toString(), fileMd5);
+        redisUtil.delete(key);
+        log.info("已删除文件的所有分片信息: 用户ID {}, 文件MD5 {}", userId, fileMd5);
+    }
+
+    // ======================= 文件路径 =======================
 
     /**
      * 根据传入的 MD5 值生成完整的文件路径
@@ -109,6 +150,8 @@ public class FileChunkUtil {
         return Files.exists(filePath);
     }
 
+
+    // ======================= 文件存储 =======================
 
     /**
      * 存储分片到临时目录

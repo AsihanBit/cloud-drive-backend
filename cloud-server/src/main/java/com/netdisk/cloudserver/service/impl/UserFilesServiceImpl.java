@@ -1,11 +1,15 @@
 package com.netdisk.cloudserver.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.service.UserFilesService;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
 import com.netdisk.dto.CreateFolderDTO;
+import com.netdisk.dto.UserFileStatusDTO;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.utils.ElasticSearchUtils;
+import com.netdisk.vo.UserInfoVO;
 import com.netdisk.vo.UserItemsVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +39,7 @@ public class UserFilesServiceImpl implements UserFilesService {
      * @return
      */
     @Override
-    public List<UserItemsVO> getUserItems(Integer itemPId) {
+    public List<UserItemsVO> getUserItemsByPId(Integer itemPId) {
         // 获取用户id
         Integer uid = BaseContext.getCurrentId();
         // 根据用户id查询 item_id下的所有条目
@@ -84,7 +88,13 @@ public class UserFilesServiceImpl implements UserFilesService {
         log.info("删除子条目-影响行数:{}", delResultPId);
 
         // ElasticSearch 删除条目以及子条目
-        boolean esIsDeleted = elasticSearchUtils.deleteItemAndChildren(itemId);
+        // 2. 保存至 ElasticSearch
+        boolean esIsDeleted;
+        try {
+            esIsDeleted = elasticSearchUtils.deleteItemAndChildren(itemId);
+        } catch (Exception e) {
+            log.error("ElasticSearch 删除失败（不影响主流程）: {}", e.getMessage());
+        }
 
     }
 
@@ -136,5 +146,59 @@ public class UserFilesServiceImpl implements UserFilesService {
         Integer userId = BaseContext.getCurrentId();
         UserFiles item = userFilesMapper.selectUserItemByItemId(userId, itemId);
         return item;
+    }
+
+    /**
+     * 查询一个用户所有条目
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<UserItemsVO> getUserItemsByUserId(Integer userId) {
+        List<UserFiles> list = userFilesMapper.selectUserItemsByUserId(userId);
+        List<UserItemsVO> userItemsVOS = BeanUtil.copyToList(list, UserItemsVO.class);
+        return userItemsVOS;
+    }
+
+    /**
+     * 查询所有用户条目
+     *
+     * @return
+     */
+    @Override
+    public List<UserItemsVO> getUserItems() {
+        List<UserFiles> userFiles = userFilesMapper.selectAllUserItems();
+        List<UserItemsVO> userItemsVOS = BeanUtil.copyToList(userFiles, UserItemsVO.class);
+        return userItemsVOS;
+    }
+
+    /**
+     * 启用禁用用户条目
+     *
+     * @param userFileStatusDTO
+     */
+    @Override
+    public void updateBanStatus(UserFileStatusDTO userFileStatusDTO) {
+        Short banStatus = userFileStatusDTO.getBanStatus();
+
+        if (banStatus == StatusConstant.ITEM_STATUS_FROZEN) {
+            banStatus = StatusConstant.ITEM_STATUS_NORMAL;
+        } else if (banStatus == StatusConstant.ITEM_STATUS_NORMAL) {
+            banStatus = StatusConstant.ITEM_STATUS_FROZEN;
+        }
+
+        userFilesMapper.updateBanStatus(userFileStatusDTO.getItemId(), banStatus);
+
+    }
+
+    /**
+     * 管理员根据 item_id 删除条目
+     *
+     * @param itemId
+     */
+    @Override
+    public void adminDeleteUserFileByItemId(Integer itemId) {
+        userFilesMapper.adminDeleteUserFileByItemId(itemId);
     }
 }

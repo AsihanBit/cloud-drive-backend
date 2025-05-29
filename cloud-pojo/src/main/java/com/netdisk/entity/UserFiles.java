@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class UserFiles {
-    private Integer ItemId;
+    private Integer itemId;
     private Integer userId;
     private String itemName;
     private Short itemType;
@@ -28,6 +28,7 @@ public class UserFiles {
     private LocalDateTime upLoadTime;
     private LocalDateTime updateTime;
     private Short recycleStatus;
+    private Short banStatus;
 
 
     /**

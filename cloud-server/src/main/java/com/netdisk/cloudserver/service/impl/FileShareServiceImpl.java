@@ -1,14 +1,13 @@
 package com.netdisk.cloudserver.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.netdisk.cloudserver.mapper.FileShareMapper;
 import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.mapper.UserMapper;
 import com.netdisk.cloudserver.service.FileShareService;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
-import com.netdisk.dto.ShareResultDTO;
-import com.netdisk.dto.UserSaveSelectedItemsDTO;
-import com.netdisk.dto.UserSharedDTO;
-import com.netdisk.dto.UserSharedItemsDTO;
+import com.netdisk.dto.*;
 import com.netdisk.entity.Share;
 import com.netdisk.entity.ShareItem;
 import com.netdisk.entity.User;
@@ -20,6 +19,7 @@ import com.netdisk.utils.CipherUtils;
 import com.netdisk.utils.RedisUtil;
 import com.netdisk.utils.ShareCodeUtil;
 import com.netdisk.vo.ShareItemVO;
+import com.netdisk.vo.ShareVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -234,6 +234,94 @@ public class FileShareServiceImpl implements FileShareService {
     public List<ShareItemVO> getOtherShareFiles(Integer shareId, Integer pItemId) {
         List<ShareItemVO> shareItems = fileShareMapper.getOtherShareFilesByShareId(shareId, pItemId);
         return shareItems;
+    }
+
+    /**
+     * 查询所有分享
+     *
+     * @return
+     */
+    @Override
+    public List<ShareVO> getAllShare() {
+        List<Share> list = fileShareMapper.selectAllShare();
+        List<ShareVO> shareVOS = BeanUtil.copyToList(list, ShareVO.class);
+        return shareVOS;
+    }
+
+    /**
+     * id查询分享
+     *
+     * @return
+     */
+    @Override
+    public Share getShareById(Integer shareId) {
+        Share share = fileShareMapper.selectShareById(shareId);
+        return share;
+    }
+
+    /**
+     * 根据用户id获取分享列表
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<Share> getShareByUserId(Integer userId) {
+        List<Share> list = fileShareMapper.selectShareByUserId(userId);
+        return list;
+    }
+
+    /**
+     * id查询分享的每个条目
+     *
+     * @param shareId
+     * @return
+     */
+    @Override
+    public List<ShareItem> getShareItemsByShareId(Integer shareId) {
+        List<ShareItem> list = fileShareMapper.getShareItemsByShareId(shareId);
+        return list;
+    }
+
+    /**
+     * id删除分享
+     *
+     * @param shareId
+     */
+    @Override
+    public void deleteShareByShareId(Integer shareId) {
+        fileShareMapper.deleteSharedItemById(shareId);
+        fileShareMapper.deleteSharedItemFilesById(shareId);
+    }
+
+    /**
+     * 管理员 重置分享的 过期时间 访问限制
+     *
+     * @param shareId
+     * @param expireType
+     * @param accessLimit
+     */
+    @Override
+    public void adminResetShareExpire(Integer shareId, Short expireType, Integer accessLimit) {
+        ShareExpirationEnums expiration = ShareExpirationEnums.getExpirationByCode(expireType);
+        // 计算到期时间
+        LocalDateTime expireTime = expiration.calculateExpireTime(LocalDateTime.now());
+        fileShareMapper.adminResetShareExpire(shareId, expireType, expireTime, accessLimit);
+    }
+
+    /**
+     * 启用禁用分享
+     *
+     * @param shareBanStatusDTO
+     */
+    @Override
+    public void updateShareBanStatus(ShareBanStatusDTO shareBanStatusDTO) {
+        if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_STATUS_NORMAL) {
+            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_STATUS_LOCKED);
+        } else if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_STATUS_LOCKED) {
+            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_STATUS_NORMAL);
+        }
+        fileShareMapper.updateShareBanStatus(shareBanStatusDTO);
     }
 
     /**

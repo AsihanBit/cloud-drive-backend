@@ -5,7 +5,6 @@ import com.netdisk.dto.CreateFolderDTO;
 import com.netdisk.result.Result;
 import com.netdisk.vo.UserItemsVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Delete;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +28,7 @@ public class UserFilesController {
      */
     @GetMapping("/items")
     public Result<List<UserItemsVO>> getUserItems(@RequestParam Integer itemPId) {
-        List<UserItemsVO> userItemsVOList = userFilesService.getUserItems(itemPId);
+        List<UserItemsVO> userItemsVOList = userFilesService.getUserItemsByPId(itemPId);
         return Result.success(userItemsVOList);
     }
 

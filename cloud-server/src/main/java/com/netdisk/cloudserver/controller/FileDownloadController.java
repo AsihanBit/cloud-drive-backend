@@ -2,7 +2,11 @@ package com.netdisk.cloudserver.controller;
 
 import com.netdisk.cloudserver.service.CheckFilesExist;
 import com.netdisk.cloudserver.service.FileDownloadService;
+import com.netdisk.constant.MessageConstant;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.entity.UserFiles;
+import com.netdisk.exception.BaseException;
+import com.netdisk.exception.PasswordErrorException;
 import com.netdisk.result.Result;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -193,6 +197,10 @@ public class FileDownloadController {
             response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
             return;
 //            return Result.error("文件不存在");
+        }
+        if (file.getBanStatus().equals(StatusConstant.ITEM_STATUS_LOCKED)) {
+            throw new BaseException(MessageConstant.FILE_STATUS_LOCKED);
+
         }
         // 2 检查用户是否拥有此文件
         UserFiles userFile = checkFilesExist.checkUserFileExistByItemIdFileId(itemId, fileId);

@@ -14,8 +14,19 @@ public class StatusConstant {
     // 账户状态常量
     public static final int ACCOUNT_STATUS_FROZEN = 0; // 账户初始
     public static final int ACCOUNT_STATUS_NORMAL = 1; // 账户正常
-    public static final int ACCOUNT_STATUS_LOCKED = -1; // 账户冻结
-    public static final int ACCOUNT_STATUS_CLOSED = -2; // 账户已关闭
+    public static final int ACCOUNT_STATUS_LOCKED = 2; // 账户冻结
+    public static final int ACCOUNT_STATUS_CLOSED = 3; // 账户已关闭
+
+    // 用户文件状态常量
+    public static final short ITEM_STATUS_FROZEN = 0; // 文件初始
+    public static final short ITEM_STATUS_NORMAL = 1; // 文件正常
+    public static final short ITEM_STATUS_LOCKED = 2; // 文件锁定
+
+    // 分享状态常量
+    public static final short SHARE_STATUS_FROZEN = 0; // 分享初始
+    public static final short SHARE_STATUS_NORMAL = 1; // 分享正常
+    public static final short SHARE_STATUS_LOCKED = 2; // 分享锁定
+
 
     // 默认存储空间（单位：字节）
     public static final long USED_STORAGE_SPACE = 0L; // 0 字节
