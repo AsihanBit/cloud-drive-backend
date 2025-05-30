@@ -84,3 +84,19 @@ kkfileview:
     host: ${kkfileview.preview.host}
     port: ${kkfileview.preview.port}
     path: ${kkfileview.preview.path}
+# 验证码跨域
+captcha:
+  expire:
+    default: 10000
+    # 文字点选验证码 过期时间设置大一点
+    WORD_IMAGE_CLICK: 60000
+  secondary:
+    enabled: false
+  # 初始化默认模板文件
+  init-default-resource: true
+  local-cache-enabled: true
+  local-cache-size: 20
+#cors:
+#  controlAllowHeaders: "*"
+#  controlAllowMethods: "*"
+#  controlAllowOrigin: "*"

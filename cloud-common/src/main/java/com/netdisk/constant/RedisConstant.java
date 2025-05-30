@@ -2,6 +2,13 @@ package com.netdisk.constant;
 
 public class RedisConstant {
     /**
+     * 验证码
+     */
+    public static final String CAPTCHA = "captcha"; // 验证码
+    public static final String REQUESTS = "requests"; // 请求验证码数量
+    public static final String AUTH_TOKEN = "auth_token"; // 验证码通过后令牌
+
+    /**
      * 宽带控制
      * 命名空间: bandwidth_control
      * bandwidth_control:用户id:键值

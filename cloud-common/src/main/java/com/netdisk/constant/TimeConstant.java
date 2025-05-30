@@ -18,4 +18,9 @@ public class TimeConstant {
      * 一毫秒中的纳秒数
      */
     public static final long NANOS_PER_MILLI = 1_000_000L;
+
+    /**
+     * 验证码 滑动时间窗口大小，单位：毫秒
+     */
+    public static final int SLIDING_WINDOW_SIZE_MILL = 5000;
 }

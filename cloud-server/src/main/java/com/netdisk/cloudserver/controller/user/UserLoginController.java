@@ -5,7 +5,9 @@ import com.netdisk.constant.MessageConstant;
 import com.netdisk.dto.UserLoginDTO;
 import com.netdisk.dto.UserRegisterDTO;
 import com.netdisk.entity.User;
+import com.netdisk.exception.BaseException;
 import com.netdisk.result.Result;
+import com.netdisk.utils.CaptchaUtils;
 import com.netdisk.utils.JwtUtil;
 import com.netdisk.vo.UserLoginVO;
 import io.jsonwebtoken.Claims;
@@ -26,13 +28,16 @@ public class UserLoginController {
 
     private UserService userService;
     private JwtUtil jwtUtil;
+    private CaptchaUtils captchaUtils;
 
 
     public UserLoginController(
             UserService userService,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            CaptchaUtils captchaUtils) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.captchaUtils = captchaUtils;
     }
 
     /**
@@ -44,6 +49,12 @@ public class UserLoginController {
     @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
+        if (userLoginDTO.getAuthToken() == null) {
+            throw new BaseException("无登录授权令牌,请完成验证");
+        }
+        // 滑动时间窗口验证令牌有效性
+        boolean isAuth = captchaUtils.validateLoginToken(userLoginDTO.getAuthToken());
+
         User user = userService.userLogin(userLoginDTO);
 
         Integer uid = user.getUserId();

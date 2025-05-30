@@ -43,6 +43,7 @@
         <elastic.search>7.17.28</elastic.search>
         <hutool>5.8.36</hutool>
         <redisson>3.45.1</redisson>
+        <tianai.captcha>1.5.2</tianai.captcha>
     </properties>
 
     <dependencyManagement>
@@ -106,6 +107,17 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson</artifactId>
                 <version>${redisson}</version>
+            </dependency>
+            <!-- 行为验证码 -->
+            <dependency>
+                <groupId>cloud.tianai.captcha</groupId>
+                <artifactId>tianai-captcha</artifactId>
+                <version>${tianai.captcha}</version>
+            </dependency>
+            <dependency>
+                <groupId>cloud.tianai.captcha</groupId>
+                <artifactId>tianai-captcha-springboot-starter</artifactId>
+                <version>${tianai.captcha}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
