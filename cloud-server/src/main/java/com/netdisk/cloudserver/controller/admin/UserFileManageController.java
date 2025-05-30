@@ -1,11 +1,20 @@
 package com.netdisk.cloudserver.controller.admin;
 
+import com.netdisk.cloudserver.service.CheckFilesExist;
+import com.netdisk.cloudserver.service.FileDownloadService;
 import com.netdisk.cloudserver.service.UserFilesService;
+import com.netdisk.constant.MessageConstant;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.dto.UserFileDTO;
 import com.netdisk.dto.UserFileStatusDTO;
+import com.netdisk.entity.UserFiles;
+import com.netdisk.exception.BaseException;
 import com.netdisk.result.Result;
 import com.netdisk.vo.UserItemsVO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,8 +25,15 @@ import java.util.List;
 public class UserFileManageController {
     private UserFilesService userFilesService;
 
-    public UserFileManageController(UserFilesService userFilesService) {
+    private FileDownloadService fileDownloadService;
+    private CheckFilesExist checkFilesExist;
+
+    public UserFileManageController(UserFilesService userFilesService,
+                                    FileDownloadService fileDownloadService,
+                                    CheckFilesExist checkFilesExist) {
         this.userFilesService = userFilesService;
+        this.fileDownloadService = fileDownloadService;
+        this.checkFilesExist = checkFilesExist;
     }
 
     /**
@@ -92,6 +108,40 @@ public class UserFileManageController {
         log.info("启用禁用用户条目成功");
         userFilesService.updateBanStatus(userFileStatusDTO);
         return Result.success();
+    }
+
+
+    @GetMapping("/chunkDownload") // 返回Result报警告
+    public void chunkDownload(@RequestParam Integer itemId,
+                              @RequestParam Integer fileId,
+                              HttpServletRequest request,
+                              HttpServletResponse response) throws Exception {
+        log.info("下载文件id: {}", fileId);
+        // 1 检查file中是否存在
+        com.netdisk.entity.File file = checkFilesExist.checkFileExistByFileId(fileId);
+        if (file == null) {
+            // 待做 自定义异常
+            response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
+            return;
+//            return Result.error("文件不存在");
+        }
+        if (file.getBanStatus().equals(StatusConstant.ITEM_STATUS_LOCKED)) {
+            throw new BaseException(MessageConstant.FILE_STATUS_LOCKED);
+
+        }
+        // 2 检查用户是否拥有此文件
+        UserFiles userFile = checkFilesExist.checkUserFileExistByItemIdFileId(itemId, fileId);
+        if (userFile == null) {
+            // 待做 自定义异常
+            response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
+            return;
+//            return Result.error("用户对文件没权限");
+        }
+        // 3 保存文件: 待做:根据用户的扩展名返回(其实前端已完成)
+        fileDownloadService.downLoadChunk(request, response, file);
+
+        return;
+//        return Result.success();
     }
 
 

@@ -2,6 +2,7 @@ package com.netdisk.cloudserver.service.impl;
 
 import com.netdisk.cloudserver.mapper.FileUploadMapper;
 import com.netdisk.cloudserver.service.FileUploadService;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
 import com.netdisk.dto.ChunkUploadDTO;
 import com.netdisk.dto.FileExistenceCheckDTO;
@@ -10,6 +11,7 @@ import com.netdisk.entity.MergeFileResult;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.utils.FileChunkUtil;
+import com.netdisk.utils.FileUtils;
 import com.netdisk.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -179,8 +181,9 @@ public class FileUploadServiceImpl implements FileUploadService {
                                         .fileCover("/")
                                         .referenceCount(1)
                                         .userId(userId)
+                                        .userExtension(FileUtils.getFileExtension(chunkUploadDTO.getFileName()))
                                         .transcodeStatus(Short.valueOf("1"))
-                                        .banStatus(Short.valueOf("0"))
+                                        .banStatus(StatusConstant.ITEM_STATUS_NORMAL)
                                         .createTime(LocalDateTime.now())
                                         .updateTime(LocalDateTime.now())
                                         .build();

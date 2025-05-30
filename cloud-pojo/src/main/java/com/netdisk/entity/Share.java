@@ -24,5 +24,6 @@ public class Share {
     private Integer accessCount;
     private Integer accessLimit;
     private Short shareStatus;
+    private Short banStatus;
     private LocalDateTime createTime;
 }
