@@ -6,8 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -15,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 //@Component // 或者这里加@Component 或者 config里@Bean
 public class RedisUtil {
 
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 构造方法注入 RedisTemplate
@@ -73,6 +76,16 @@ public class RedisUtil {
      */
     public Boolean delete(String key) {
         return redisTemplate.delete(key);
+    }
+
+    /**
+     * 执行Redis事务
+     *
+     * @param callback 事务回调
+     * @return 执行结果
+     */
+    public <T> T executeTransaction(SessionCallback<T> callback) {
+        return redisTemplate.execute(callback);
     }
 
 
@@ -144,39 +157,88 @@ public class RedisUtil {
     /**
      * ======================= 有序集合相关 =======================
      */
+    /**
+     * 向有序集合添加元素
+     *
+     * @param key   键
+     * @param value 值
+     * @param score 分数
+     * @return 添加成功返回true
+     */
+    public Boolean zSetAdd(String key, Object value, double score) {
+        return redisTemplate.opsForZSet().add(key, value, score);
+    }
 
     /**
      * 获取有序集合的大小
      *
      * @param key 键
-     * @return 有序集合的大小
+     * @return 集合大小
      */
     public Long getZSetSize(String key) {
         return redisTemplate.opsForZSet().size(key);
     }
 
-    /**
-     * 添加ZSET中的元素，使用时间戳作为分数 最好是毫秒防止网络波动
-     *
-     * @param key   键
-     * @param value 值
-     * @param score 排序分数
-     * @return 是否添加成功
-     */
-    public Boolean addZSet(String key, String value, double score) {
-        return redisTemplate.opsForZSet().add(key, value, score);
+    public Long zSetSizeByRange(String key, double min, double max) {
+        return redisTemplate.opsForZSet().count(key, min, max);
     }
 
     /**
-     * ZSet 范围移除
+     * 获取ZSet中指定成员的分数
      *
-     * @param key
-     * @param min
-     * @param max
-     * @return
+     * @param key    Redis键
+     * @param member 成员
+     * @return 成员的分数，如果成员不存在则返回null
      */
-    public Long removeZSetRange(String key, double min, double max) {
+    public Double zSetScore(String key, Object member) {
+        return redisTemplate.opsForZSet().score(key, member);
+    }
+
+    /**
+     * 从ZSet中移除指定成员
+     *
+     * @param key     Redis键
+     * @param members 要移除的成员
+     * @return 成功移除的成员数量
+     */
+    public Long zSetRemove(String key, Object... members) {
+        return redisTemplate.opsForZSet().remove(key, members);
+    }
+
+    /**
+     * 移除ZSet中指定排名范围的成员
+     *
+     * @param key   Redis键
+     * @param start 开始排名（最小分数为0）
+     * @param end   结束排名（最大分数为-1）
+     * @return 移除的成员数量
+     */
+    public Long zSetRemoveRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().removeRange(key, start, end);
+    }
+
+    /**
+     * 移除有序集合中指定分数范围的元素
+     *
+     * @param key 键
+     * @param min 最小分数
+     * @param max 最大分数
+     * @return 移除的元素数量
+     */
+    public Long zSetRemoveRangeByScore(String key, double min, double max) {
         return redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
+    }
+
+    /**
+     * 获取有序集合中指定范围的元素（带分数）
+     *
+     * @param key   键
+     * @param start 开始索引
+     * @param end   结束索引
+     * @return 元素集合
+     */
+    public Set<ZSetOperations.TypedTuple<Object>> zRangeWithScores(String key, long start, long end) {
+        return redisTemplate.opsForZSet().rangeWithScores(key, start, end);
     }
 
 

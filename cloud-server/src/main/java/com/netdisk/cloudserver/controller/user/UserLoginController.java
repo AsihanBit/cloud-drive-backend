@@ -53,8 +53,12 @@ public class UserLoginController {
             throw new BaseException("无登录授权令牌,请完成验证");
         }
         // 滑动时间窗口验证令牌有效性
-        boolean isAuth = captchaUtils.validateLoginToken(userLoginDTO.getAuthToken());
-
+//        boolean isAuth = captchaUtils.validateLoginTokenStr(userLoginDTO.getAuthToken());
+        // todo 工具类里抛出的业务异常都移出
+        boolean isAuthed = captchaUtils.validateLoginTokenZSet(userLoginDTO.getAuthToken());
+        if (!isAuthed) {
+            throw new BaseException("登录授权令牌失效,请重新验证");
+        }
         User user = userService.userLogin(userLoginDTO);
 
         Integer uid = user.getUserId();

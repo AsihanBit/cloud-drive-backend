@@ -6,15 +6,15 @@ import cloud.tianai.captcha.application.vo.ImageCaptchaVO;
 import cloud.tianai.captcha.common.constant.CaptchaTypeConstant;
 import cloud.tianai.captcha.common.response.ApiResponse;
 import com.netdisk.dto.CaptchaReq;
+import com.netdisk.exception.BaseException;
 import com.netdisk.result.Result;
 import com.netdisk.utils.CaptchaUtils;
+import com.netdisk.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -60,6 +60,17 @@ public class CaptchaController {
     @ResponseBody
     public CaptchaResponse<ImageCaptchaVO> genCaptcha(HttpServletRequest request, @RequestParam(value = "type", required = false) String type) {
         log.info("生成验证码接口");
+        // 检查客户端申请令牌的频率
+        boolean allow = captchaUtils.checkTokenRateLimit();
+        if (!allow) {
+            throw new BaseException("令牌生成过于频繁，请稍后再试");
+//            return Result.error("令牌生成过于频繁，请稍后再试");
+        }
+
+
+        String clientIp = IpUtils.getClientIp();
+        log.info("获取ip测试:{}", clientIp);
+
         if (StringUtils.isBlank(type)) {
             type = CaptchaTypeConstant.SLIDER;
         }
@@ -88,7 +99,7 @@ public class CaptchaController {
         ApiResponse<?> response = imageCaptchaApplication.matching(data.getId(), data.getData());
         if (response.isSuccess()) {
 
-            String authToken = captchaUtils.generateLoginToken();
+            String authToken = captchaUtils.generateLoginTokenZSet();
 
             // 创建包含id和authToken的Map
             Map<String, String> result = new HashMap<>();
