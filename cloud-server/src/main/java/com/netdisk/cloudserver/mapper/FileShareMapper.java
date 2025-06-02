@@ -1,7 +1,7 @@
 package com.netdisk.cloudserver.mapper;
 
 import com.netdisk.dto.ShareBanStatusDTO;
-import com.netdisk.dto.UserSharedDTO;
+import com.netdisk.dto.SharedDTO;
 import com.netdisk.entity.Share;
 import com.netdisk.entity.ShareItem;
 import com.netdisk.vo.ShareItemVO;
@@ -33,7 +33,7 @@ public interface FileShareMapper {
      * @param userId
      * @return
      */
-    List<UserSharedDTO> getUserOwnSharedList(Integer userId);
+    List<SharedDTO> getUserOwnSharedList(Integer userId);
 
 
     /**

@@ -10,7 +10,7 @@ public interface FileUploadService {
      *
      * @param fileExistenceCheckDTO
      */
-    void userUploadFile(FileExistenceCheckDTO fileExistenceCheckDTO, File file);
+    void userUploadFileExist(FileExistenceCheckDTO fileExistenceCheckDTO, File file);
 
     /**
      * 上传分片

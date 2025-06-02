@@ -5,6 +5,7 @@ import com.netdisk.dto.UserAccountStatusDTO;
 import com.netdisk.dto.UserDTO;
 import com.netdisk.dto.UserLoginDTO;
 import com.netdisk.dto.UserRegisterDTO;
+import com.netdisk.entity.File;
 import com.netdisk.entity.User;
 import com.netdisk.vo.UserInfoVO;
 
@@ -67,4 +68,12 @@ public interface UserService {
      * @param userDTO
      */
     void updateUser(UserDTO userDTO);
+
+    /**
+     * 判断剩余空间是否足够可用
+     *
+     * @param fileSize
+     * @return
+     */
+    boolean checkSpaceEnough(Long fileSize);
 }

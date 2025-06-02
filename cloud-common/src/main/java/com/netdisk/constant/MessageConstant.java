@@ -23,6 +23,7 @@ public class MessageConstant {
 
     // 文件下载相关提示
     public static final String FILE_STATUS_LOCKED = "文件被禁用";
+    public static final String FILE_NOT_FOUND = "文件不存在或已损坏";
 
 
     // 文件分片相关异常消息

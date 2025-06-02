@@ -14,6 +14,7 @@ import com.netdisk.entity.User;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.enums.ShareExpirationEnums;
 import com.netdisk.enums.ShareTransferEnum;
+import com.netdisk.exception.BaseException;
 import com.netdisk.properties.ShareProperties;
 import com.netdisk.utils.CipherUtils;
 import com.netdisk.utils.RedisUtil;
@@ -81,14 +82,15 @@ public class FileShareServiceImpl implements FileShareService {
                 .expireTime(expireTime)
                 .accessCount(0)
                 .accessLimit(userShareItemsDTO.getAccessLimit())
-                .shareStatus(Short.valueOf("1"))
+                .shareStatus(StatusConstant.SHARE_STATUS_NORMAL)
+                .banStatus(StatusConstant.SHARE_BAN_STATUS_NORMAL)
                 .createTime(createTime)
                 .build();
         // 新增分享: ps:返回的是受影响的行数,获取主键直接把上面 share.getXxx就可以
         Integer affectedRowCount = fileShareMapper.insertShare(share);
         // 遍历子文件加入share_item表
         for (Integer itemId : userShareItemsDTO.getItemIds()) {
-            UserFiles userItem = userFilesMapper.selectUserItemByItemId(userId, itemId);
+            UserFiles userItem = userFilesMapper.selectUserItemByItemIdWithUserId(userId, itemId);
             ShareItem shareItem = ShareItem.builder()
 //                    .shareId(shareId) // 这是受影响的行数
                     .shareId(share.getShareId())
@@ -116,43 +118,14 @@ public class FileShareServiceImpl implements FileShareService {
 
         }
 
-        Integer shareId = share.getShareId();
-        String shareStr = "";
-        // 加密 分享id
-        try {
-            shareStr = CipherUtils.encryptCBC(shareId);
-        } catch (Exception e) {
-            // TODO 加密失败,可返回提示
-            throw new RuntimeException(e);
-        }
-        // 对 分享码 进行 URL 编码
-        // 浏览器自动解码,所以获取请求时不需要解码
-        String encodedShareStr;
-        try {
-            encodedShareStr = URLEncoder.encode(shareStr, StandardCharsets.UTF_8.toString());
-        } catch (UnsupportedEncodingException e) {
-            // TODO 编码失败,可返回提示
-            throw new RuntimeException(e);
-        }
+        ShareResultDTO shareResultDTO = generateShareLink(share);
 
-        // 构造 分享链接
-        String baseShareLink = shareProperties.getLink().getShareLink();
-
-        // 构造带参数的URL（格式：baseUrl?shareStr=xxx&shareCode=yyy）
-        String shareLinkWithParams = baseShareLink + "?shareStr=" + encodedShareStr + "&shareCode=" + shareCode;
-
-        ShareResultDTO shareTransferResultDTO = ShareResultDTO.builder()
-                .shareStr(shareStr)
-                .shareCode(shareCode)
-                .shareLink(shareLinkWithParams)
-                .build();
-
-        return shareTransferResultDTO;
+        return shareResultDTO;
     }
 
     private void addShareItemsRecursively(Integer shareId, Integer pShareItemId, Integer userId, Integer itemId) {
         // 获取当前文件夹的子文件和子文件夹
-        List<UserFiles> childItems = userFilesMapper.selectUserItemsByItemPId(userId, itemId);
+        List<UserFiles> childItems = userFilesMapper.selectUserItemsByItemPIdWithUserId(userId, itemId);
 
         for (UserFiles childItem : childItems) {
             // 创建 shareItem 对象
@@ -186,9 +159,9 @@ public class FileShareServiceImpl implements FileShareService {
      * @return
      */
     @Override
-    public List<UserSharedDTO> getUserOwnSharedList() {
+    public List<SharedDTO> getUserOwnSharedList() {
         Integer userId = BaseContext.getCurrentId();
-        List<UserSharedDTO> userSharedItemList = fileShareMapper.getUserOwnSharedList(userId);
+        List<SharedDTO> userSharedItemList = fileShareMapper.getUserOwnSharedList(userId);
         return userSharedItemList;
     }
 
@@ -316,12 +289,65 @@ public class FileShareServiceImpl implements FileShareService {
      */
     @Override
     public void updateShareBanStatus(ShareBanStatusDTO shareBanStatusDTO) {
-        if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_STATUS_NORMAL) {
-            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_STATUS_LOCKED);
-        } else if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_STATUS_LOCKED) {
-            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_STATUS_NORMAL);
+        if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_BAN_STATUS_NORMAL) {
+            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_BAN_STATUS_LOCKED);
+        } else if (shareBanStatusDTO.getBanStatus() == StatusConstant.SHARE_BAN_STATUS_LOCKED) {
+            shareBanStatusDTO.setBanStatus(StatusConstant.SHARE_BAN_STATUS_NORMAL);
         }
         fileShareMapper.updateShareBanStatus(shareBanStatusDTO);
+    }
+
+    /**
+     * 生成分享链接
+     *
+     * @param shareId
+     * @return
+     */
+    @Override
+    public ShareResultDTO getShareLink(Integer shareId) {
+        // 查询分享
+        Share share = fileShareMapper.selectShareById(shareId);
+        if (share == null) {
+            throw new BaseException("不存在这个分享");
+        }
+
+        ShareResultDTO shareResultDTO = generateShareLink(share);
+        return shareResultDTO;
+    }
+
+    private ShareResultDTO generateShareLink(Share share) {
+        Integer shareId = share.getShareId();
+        String shareStr = "";
+        // 加密 分享id
+        try {
+            shareStr = CipherUtils.encryptCBC(shareId);
+        } catch (Exception e) {
+            // TODO 加密失败,可返回提示
+            throw new RuntimeException(e);
+        }
+        // 对 分享码 进行 URL 编码
+        // 浏览器自动解码,所以获取请求时不需要解码
+        String encodedShareStr;
+        try {
+            encodedShareStr = URLEncoder.encode(shareStr, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            // TODO 编码失败,可返回提示
+            throw new RuntimeException(e);
+        }
+
+        // 构造 分享链接
+        String baseShareLink = shareProperties.getLink().getShareLink();
+
+        // 构造带参数的URL（格式：baseUrl?shareStr=xxx&shareCode=yyy）
+        String shareLinkWithParams = baseShareLink + "?shareStr=" + encodedShareStr + "&shareCode=" + share.getShareCode();
+
+        ShareResultDTO shareTransferResultDTO = ShareResultDTO.builder()
+                .shareStr(shareStr)
+                .shareCode(share.getShareCode())
+                .shareLink(shareLinkWithParams)
+                .build();
+
+        return shareTransferResultDTO;
     }
 
     /**
@@ -364,6 +390,25 @@ public class FileShareServiceImpl implements FileShareService {
         }
         // 2 如果 userId 不等于分享者,+1访问次数,访问次数到限制不能访问
         if (!share.getUserId().equals(userId)) {
+            // 1. 分享锁定状态
+            if (share.getBanStatus() == StatusConstant.SHARE_BAN_STATUS_LOCKED) {
+                throw new BaseException("分享已被锁定");
+            }
+
+            // 2. 分享到期时间
+            LocalDateTime expireTime = share.getExpireTime();
+            log.info("分享的到期时间是:{}", expireTime);
+            if (LocalDateTime.now().isAfter(expireTime)) {
+                throw new BaseException("分享已经到期了");
+            }
+
+            // 3. 分享访问次数
+            if (share.getAccessCount() >= share.getAccessLimit()) {
+                throw new BaseException("访问次数已达上限");
+            }
+
+            // 通过验证,访问次数+1
+            log.info("外部用户访问分享链接,增加访问记录");
             Integer accessCount = share.getAccessCount() + 1;
             // 分享 - 增加一次访问记录
             fileShareMapper.incrementShareAccessCount(shareId, accessCount);
@@ -470,7 +515,7 @@ public class FileShareServiceImpl implements FileShareService {
      */
     private void saveItemRecursively(Integer userId, Integer pItemId, LocalDateTime now, Integer shareUserId, Integer itemId) {
         // 查询分享的条目
-        UserFiles userItem = userFilesMapper.selectUserItemByItemId(shareUserId, itemId);
+        UserFiles userItem = userFilesMapper.selectUserItemByItemIdWithUserId(shareUserId, itemId);
         if (userItem == null) {
             // 分享的用户已删除源文件
             return;
@@ -489,7 +534,7 @@ public class FileShareServiceImpl implements FileShareService {
             System.out.println("转存的是文件夹");
 
             // 查询文件夹的子文件和子文件夹
-            List<UserFiles> childItems = userFilesMapper.selectUserItemsByItemPId(shareUserId, itemId);
+            List<UserFiles> childItems = userFilesMapper.selectUserItemsByItemPIdWithUserId(shareUserId, itemId);
 
 
             // 保存文件夹

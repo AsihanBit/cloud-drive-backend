@@ -13,7 +13,7 @@ public interface UserFilesMapper {
      * @param itemPId
      * @return
      */
-    List<UserFiles> selectUserItemsByItemPId(Integer userId, Integer itemPId);
+    List<UserFiles> selectUserItemsByItemPIdWithUserId(Integer userId, Integer itemPId);
 
     /**
      * 根据 item_id 检查用户条目
@@ -22,7 +22,7 @@ public interface UserFilesMapper {
      * @param itemId
      * @return
      */
-    UserFiles selectUserItemByItemId(Integer userId, Integer itemId);
+    UserFiles selectUserItemByItemIdWithUserId(Integer userId, Integer itemId);
 
     /**
      * 根据item_id删除条目
@@ -31,7 +31,7 @@ public interface UserFilesMapper {
      * @param itemId
      * @return
      */
-    Integer deleteUserItemByItemId(Integer userId, Integer itemId);
+    Integer deleteUserItemByItemIdWithUserId(Integer userId, Integer itemId);
 
     /**
      * 删除item_id这个条目的子条目
@@ -84,8 +84,33 @@ public interface UserFilesMapper {
 
     /**
      * 管理员根据 item_id 删除条目
+     * TODO 冗余重复了
      *
      * @param itemId
      */
     void adminDeleteUserFileByItemId(Integer itemId);
+
+    /**
+     * item_id 查询用户条目
+     *
+     * @param itemId
+     * @return
+     */
+    UserFiles selectUserItemByItemId(Integer itemId);
+
+    /**
+     * item_id 删除条目
+     *
+     * @param itemId
+     */
+    void deleteUserItemByItemId(Integer itemId);
+
+
+    /**
+     * 根据 itemId 查询条目下的条目
+     *
+     * @param itemId
+     * @return
+     */
+    List<UserFiles> selectUserItemsByItemPId(Integer itemId);
 }

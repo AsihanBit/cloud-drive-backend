@@ -96,7 +96,7 @@ captcha:
   init-default-resource: true
   local-cache-enabled: true
   local-cache-size: 20
-#cors:
-#  controlAllowHeaders: "*"
-#  controlAllowMethods: "*"
-#  controlAllowOrigin: "*"
+cors:
+  controlAllowHeaders: "*"
+  controlAllowMethods: "*"
+  controlAllowOrigin: "*"

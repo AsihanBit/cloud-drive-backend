@@ -3,7 +3,7 @@ package com.netdisk.cloudserver.controller;
 import com.netdisk.cloudserver.service.FileShareService;
 import com.netdisk.dto.ShareResultDTO;
 import com.netdisk.dto.UserSaveSelectedItemsDTO;
-import com.netdisk.dto.UserSharedDTO;
+import com.netdisk.dto.SharedDTO;
 import com.netdisk.dto.UserSharedItemsDTO;
 import com.netdisk.enums.ShareTransferEnum;
 import com.netdisk.result.Result;
@@ -41,15 +41,26 @@ public class FileShareController {
     }
 
     /**
+     * 生成分享链接
+     */
+    @PostMapping("/generateShareLink")
+    public Result<ShareResultDTO> generateShareLink(@RequestParam Integer shareId) {
+        // 用户生成分享链接
+        ShareResultDTO shareTransferResultDTO = fileShareService.getShareLink(shareId);
+        return Result.success(shareTransferResultDTO);
+    }
+
+
+    /**
      * 获取用户自己分享过的文件列表
      *
      * @return
      */
     @GetMapping("/items")
-    public Result<List<UserSharedDTO>> userShareItems() {
+    public Result<List<SharedDTO>> userShareItems() {
         // 获取用户自己分享过的文件列表
         // TODO 有效期类型改字符串
-        List<UserSharedDTO> userOwnSharedList = fileShareService.getUserOwnSharedList();
+        List<SharedDTO> userOwnSharedList = fileShareService.getUserOwnSharedList();
         return Result.success(userOwnSharedList);
     }
 

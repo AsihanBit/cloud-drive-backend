@@ -4,13 +4,16 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.system.UserInfo;
 import com.netdisk.cloudserver.mapper.UserFilesMapper;
 import com.netdisk.cloudserver.mapper.UserMapper;
+import com.netdisk.cloudserver.service.UserFilesService;
 import com.netdisk.cloudserver.service.UserService;
 import com.netdisk.constant.MessageConstant;
 import com.netdisk.constant.StatusConstant;
+import com.netdisk.context.BaseContext;
 import com.netdisk.dto.UserAccountStatusDTO;
 import com.netdisk.dto.UserDTO;
 import com.netdisk.dto.UserLoginDTO;
 import com.netdisk.dto.UserRegisterDTO;
+import com.netdisk.entity.File;
 import com.netdisk.entity.User;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.exception.AccountNotFoundException;
@@ -33,13 +36,16 @@ public class UserServiceImpl implements UserService {
 
     private UserMapper userMapper;
     // 初始化示例文档
+    private UserFilesService userFilesService;
     private UserFilesMapper userFilesMapper;
     private ElasticSearchUtils elasticSearchUtils;
 
     public UserServiceImpl(
+            UserFilesService userFilesService,
             UserMapper userMapper,
             UserFilesMapper userFilesMapper,
             ElasticSearchUtils elasticSearchUtils) {
+        this.userFilesService = userFilesService;
         this.userMapper = userMapper;
         this.userFilesMapper = userFilesMapper;
         this.elasticSearchUtils = elasticSearchUtils;
@@ -104,6 +110,12 @@ public class UserServiceImpl implements UserService {
         if (user.getStatus().equals(StatusConstant.ACCOUNT_STATUS_LOCKED)) {
             throw new PasswordErrorException(MessageConstant.ACCOUNT_LOCKED);
         }
+        // 更新登录时间
+        UserDTO userDTO = UserDTO.builder()
+                .userId(user.getUserId())
+                .lastLoginTime(LocalDateTime.now())
+                .build();
+        userMapper.updateUser(userDTO);
         user.setPassword(null);
 
         return user;
@@ -211,6 +223,22 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * 判断剩余空间是否足够可用
+     *
+     * @param fileSize
+     * @return
+     */
+    @Override
+    public boolean checkSpaceEnough(Long fileSize) {
+        Integer userId = BaseContext.getCurrentId();
+        User user = userMapper.selectUserByUserId(userId);
+        if (user.getUsedSpace() + fileSize > user.getTotalSpace()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * 给用户初始示例文档
      *
      * @param userId
@@ -244,6 +272,12 @@ public class UserServiceImpl implements UserService {
                 .map(file -> buildUserFile(userId, now, file))
                 .collect(Collectors.toList());
 
+        // 计算所有实际文件的总大小（排除文件夹）
+        Long totalFileSize = defaultFiles.stream()
+                .filter(file -> file.getItemType() == (short) 1) // 只计算文件，排除文件夹
+                .mapToLong(file -> file.getFileSize() != null ? file.getFileSize() : 0L)
+                .sum();
+        userFilesService.updateUsedSpace(userId, totalFileSize);
         userFilesMapper.batchInsertItems(userFilesList);
         elasticSearchUtils.bulkInsertUserFiles(userFilesList);
 

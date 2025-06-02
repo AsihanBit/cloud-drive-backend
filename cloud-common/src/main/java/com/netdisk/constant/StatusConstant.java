@@ -24,8 +24,10 @@ public class StatusConstant {
 
     // 分享状态常量
     public static final short SHARE_STATUS_FROZEN = 0; // 分享初始
-    public static final short SHARE_STATUS_NORMAL = 1; // 分享正常
+    public static final short SHARE_STATUS_NORMAL = 1; // 分享可用
     public static final short SHARE_STATUS_LOCKED = 2; // 分享锁定
+    public static final short SHARE_BAN_STATUS_NORMAL = 1; // 分享正常
+    public static final short SHARE_BAN_STATUS_LOCKED = 2; // 分享锁定
 
 
     // 默认存储空间（单位：字节）

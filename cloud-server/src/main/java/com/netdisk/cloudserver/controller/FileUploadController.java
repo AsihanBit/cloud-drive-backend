@@ -2,12 +2,14 @@ package com.netdisk.cloudserver.controller;
 
 import com.netdisk.cloudserver.service.CheckFilesExist;
 import com.netdisk.cloudserver.service.FileUploadService;
+import com.netdisk.cloudserver.service.UserService;
 import com.netdisk.constant.MessageConstant;
+import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
 import com.netdisk.dto.ChunkUploadDTO;
 import com.netdisk.dto.FileExistenceCheckDTO;
 import com.netdisk.entity.File;
-import com.netdisk.entity.MergeFileResult;
+import com.netdisk.exception.BaseException;
 import com.netdisk.result.Result;
 import com.netdisk.utils.FileChunkUtil;
 import com.netdisk.utils.RedisUtil;
@@ -26,16 +28,19 @@ import java.io.IOException;
 public class FileUploadController {
     private static final Logger log = LoggerFactory.getLogger(FileUploadController.class);
 
+    private UserService userService;
     private FileChunkUtil fileChunkUtil;
     private FileUploadService fileUploadService;
     private CheckFilesExist checkFilesExist;
     private RedisUtil redisUtil;
 
     public FileUploadController(
+            UserService userService,
             FileChunkUtil fileChunkUtil,
             FileUploadService fileUploadService,
             CheckFilesExist checkFilesExist,
             RedisUtil redisUtil) {
+        this.userService = userService;
         this.fileChunkUtil = fileChunkUtil;
         this.fileUploadService = fileUploadService;
         this.checkFilesExist = checkFilesExist;
@@ -51,11 +56,15 @@ public class FileUploadController {
 
         return Result.success(MessageConstant.FILE_UPLOAD_SUCCESS);
     }
+    // TODO return 统一都放在控制层里
 
     @Operation(summary = "分片上传")
     @PostMapping("/chunkUpload")
     public Result chunkUploadFile(ChunkUploadDTO chunkUploadDTO) {
+        // 1. 判断剩余空间是否足够
 
+
+        // 2. 上传每个分片
         fileUploadService.uploadChunk(chunkUploadDTO);
 
         log.info("整个文件哈希值: {}", chunkUploadDTO.getFileHash());
@@ -105,13 +114,28 @@ public class FileUploadController {
     public Result fileIsExist(@RequestBody FileExistenceCheckDTO fileExistenceCheckDTO) {
         // 需要: 文件名 pid (file_id file_size file_cover) [file_extension]
         // @RequestParam String fileHash, @RequestParam Integer targetPathId
-        // 文件存在判断-数据库
+
+        // 1. 判断剩余空间是否足够可用
+        boolean spaceEnough = userService.checkSpaceEnough(fileExistenceCheckDTO.getFileSize());
+        if (!spaceEnough) {
+//            throw new BaseException("账户剩余可用空间不足");
+            return Result.success(2);
+        }
+
+        // 2. 文件存在判断-数据库
         File file = checkFilesExist.checkFileExistByMD5(fileExistenceCheckDTO);
         if (file == null) {
-            return Result.success(false);
+            return Result.success(0); // 文件不存在 上传
         }
-        fileUploadService.userUploadFile(fileExistenceCheckDTO, file);
-        return Result.success(true);
+
+        // 3. 文件存在 判断是否封禁
+        if (file.getBanStatus() == StatusConstant.ITEM_STATUS_LOCKED) {
+//            throw new BaseException("该文件可能涉及违禁内容,当前不可上传");
+            return Result.success(3);
+        }
+
+        fileUploadService.userUploadFileExist(fileExistenceCheckDTO, file);
+        return Result.success(1); // TODO 这里都换成常量 字符/数字/实体/枚举
 
         /*
         // 文件存在判断-本地存储

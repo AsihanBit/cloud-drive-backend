@@ -1,14 +1,21 @@
 package com.netdisk.cloudserver.service.impl;
 
+import com.netdisk.cloudserver.mapper.FileMapper;
 import com.netdisk.cloudserver.mapper.FileUploadMapper;
+import com.netdisk.cloudserver.mapper.UserFilesMapper;
+import com.netdisk.cloudserver.mapper.UserMapper;
 import com.netdisk.cloudserver.service.FileUploadService;
+import com.netdisk.cloudserver.service.UserFilesService;
+import com.netdisk.cloudserver.service.UserService;
 import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
 import com.netdisk.dto.ChunkUploadDTO;
 import com.netdisk.dto.FileExistenceCheckDTO;
 import com.netdisk.entity.File;
 import com.netdisk.entity.MergeFileResult;
+import com.netdisk.entity.User;
 import com.netdisk.entity.UserFiles;
+import com.netdisk.exception.BaseException;
 import com.netdisk.utils.ElasticSearchUtils;
 import com.netdisk.utils.FileChunkUtil;
 import com.netdisk.utils.FileUtils;
@@ -29,6 +36,10 @@ import java.util.concurrent.TimeUnit;
 public class FileUploadServiceImpl implements FileUploadService {
 
     //    private static final Logger log = LoggerFactory.getLogger(FileUploadServiceImpl.class);
+    private UserService userService;
+    private UserMapper userMapper;
+    private UserFilesService userFilesService;
+    private FileMapper fileMapper;
     private FileUploadMapper fileUploadMapper;
     private FileChunkUtil fileChunkUtil;
     private RedisUtil redisUtil;
@@ -37,12 +48,20 @@ public class FileUploadServiceImpl implements FileUploadService {
     private RedissonClient redissonClient;
 
     public FileUploadServiceImpl(
+            UserService userService,
+            UserMapper userMapper,
+            UserFilesService userFilesService,
+            FileMapper fileMapper,
             FileUploadMapper fileUploadMapper,
             FileChunkUtil fileChunkUtil,
             RedisUtil redisUtil,
             ElasticSearchUtils elasticSearchUtils,
             ExecutorService executorService,
             RedissonClient redissonClient) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+        this.userFilesService = userFilesService;
+        this.fileMapper = fileMapper;
         this.fileUploadMapper = fileUploadMapper;
         this.fileChunkUtil = fileChunkUtil;
         this.redisUtil = redisUtil;
@@ -57,11 +76,12 @@ public class FileUploadServiceImpl implements FileUploadService {
      * @param fileExistenceCheckDTO
      */
     @Override
-    public void userUploadFile(FileExistenceCheckDTO fileExistenceCheckDTO, File file) {
-        Integer userId = BaseContext.getCurrentId();
+    public void userUploadFileExist(FileExistenceCheckDTO fileExistenceCheckDTO, File file) {
         // 获取已存在文件的信息,大小,id等
 //        fileUploadMapper.queryFileByHash(fileExistenceCheckDTO.getFileHash());
 //        Short itemType = (short) 1;
+        // 1. 文件添加到用户账户
+        Integer userId = BaseContext.getCurrentId();
         /**
          * √ ItemId
          * √ userId
@@ -78,7 +98,7 @@ public class FileUploadServiceImpl implements FileUploadService {
          * √ recycleStatus
          */
         Short pIdDirectoryLevel = getPIdDirectoryLevel(fileExistenceCheckDTO.getTargetPathId());
-        UserFiles userFile = UserFiles.builder()
+        UserFiles newUserFile = UserFiles.builder()
                 .userId(userId)
                 .itemName(fileExistenceCheckDTO.getFileName())
                 .itemType(Short.valueOf("1"))
@@ -93,16 +113,30 @@ public class FileUploadServiceImpl implements FileUploadService {
                 .banStatus(Short.valueOf("1"))
                 .build();
         // 设置用户的文件扩展名
-        String fileExtension = userFile.generateFileExtension();
-        userFile.setFileExtension(fileExtension);
-        Integer affectedRow = fileUploadMapper.insertUserFile(userFile);
-        log.info("受影响的行数:{}", affectedRow);
-        log.info("用户新增条目itemId:{}", userFile.getItemId());
+        String fileExtension = newUserFile.generateFileExtension();
+        newUserFile.setFileExtension(fileExtension);
 
-        // 2. 保存至 ElasticSearch
+        // user_file表中创建用户和文件的关联信息
+        userUploadFile(newUserFile);
+    }
+
+    private void userUploadFile(UserFiles newUserFile) {
+
+        // 1. user_file表中创建用户和文件的关联信息
+        Integer affectedRow = fileUploadMapper.insertUserFile(newUserFile);
+        // 更新用户已用空间 增加 所以是正号
+        userFilesService.updateUsedSpace(newUserFile.getUserId(), newUserFile.getFileSize());
+
+        // 2. 增加文件引用次数
+        File file = fileMapper.selectFileByFileId(newUserFile.getFileId());
+        Integer referenceCount = file.getReferenceCount() != null ? file.getReferenceCount() : 0;
+        referenceCount += 1;
+        fileMapper.updateReferenceCount(file.getFileId(), referenceCount);
+
+        // 3. 保存至 ElasticSearch
         boolean isSuccess;
         try {
-            isSuccess = elasticSearchUtils.insertUserFilesDoc(userFile);
+            isSuccess = elasticSearchUtils.insertUserFilesDoc(newUserFile);
         } catch (Exception e) {
             log.error("ElasticSearch 保存失败（不影响主流程）: {}", e.getMessage());
         }
@@ -179,7 +213,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                                         .storageLocation("/")
                                         .fileSize(mergeFileResult.getFileSize())
                                         .fileCover("/")
-                                        .referenceCount(1)
+                                        .referenceCount(0)
                                         .userId(userId)
                                         .userExtension(FileUtils.getFileExtension(chunkUploadDTO.getFileName()))
                                         .transcodeStatus(Short.valueOf("1"))
@@ -187,7 +221,6 @@ public class FileUploadServiceImpl implements FileUploadService {
                                         .createTime(LocalDateTime.now())
                                         .updateTime(LocalDateTime.now())
                                         .build();
-
 
                                 // file表中创建新文件信息 ps:是受影响的行数
                                 Integer fileId = fileUploadMapper.insertNewFile(newFile);
@@ -216,13 +249,13 @@ public class FileUploadServiceImpl implements FileUploadService {
                                  * √ updateTime
                                  * √ recycleStatus
                                  */
-                                UserFiles userNewFile = UserFiles.builder()
+                                UserFiles newUserFile = UserFiles.builder()
                                         .userId(userId)
                                         .itemName(chunkUploadDTO.getFileName())
                                         .itemType(Short.valueOf("1"))
                                         .pId(chunkUploadDTO.getTargetPathId())
                                         .directoryLevel((short) (pIdDirectoryLevel + 1))
-//                    .fileId(fileId) // 是受影响的行数
+                                        // .fileId(fileId)   // 是受影响的行数
                                         .fileId(newFile.getFileId())
                                         .fileSize(mergeFileResult.getFileSize()) // 冗余字段
                                         .fileCover("/") // 冗余字段
@@ -231,19 +264,11 @@ public class FileUploadServiceImpl implements FileUploadService {
                                         .recycleStatus(Short.valueOf("0"))
                                         .build();
                                 // 设置用户指定的扩展名
-                                String fileExtension = userNewFile.generateFileExtension();
-                                userNewFile.setFileExtension(fileExtension);
+                                String fileExtension = newUserFile.generateFileExtension();
+                                newUserFile.setFileExtension(fileExtension);
 
                                 // user_file表中创建用户和文件的关联信息
-                                fileUploadMapper.insertUserFile(userNewFile);
-
-                                // 2. 保存至 ElasticSearch
-                                boolean isSuccess;
-                                try {
-                                    isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFile);
-                                } catch (Exception e) {
-                                    log.error("ElasticSearch 保存失败（不影响主流程）: {}", e.getMessage());
-                                }
+                                userUploadFile(newUserFile);
 
                                 // 清除分片redis
                                 fileChunkUtil.deleteAllChunk(userId, chunkUploadDTO.getFileHash());
@@ -251,12 +276,11 @@ public class FileUploadServiceImpl implements FileUploadService {
                                 // 清除存储的所有分片文件 (可以紧接着在保存file后执行) (也可以在mergeChunks完成)
                                 fileChunkUtil.deleteAllChunks(chunkUploadDTO.getFileHash());
 
-
                             }
                         } catch (Exception e) {
                             log.error("合并任务执行失败: {}", e.getMessage(), e);
                         } finally {
-                            // Redisson 安全释放锁
+                            // Redisson 安全释放锁 TODO 待优化
                             if (finalIsLocked && lock.isHeldByCurrentThread()) {
                                 lock.unlock();
                                 log.info("Redisson已释放锁");

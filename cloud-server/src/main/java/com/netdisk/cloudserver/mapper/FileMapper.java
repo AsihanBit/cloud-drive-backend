@@ -36,4 +36,12 @@ public interface FileMapper {
      * @param fileBanStatusDTO
      */
     void updateFileBanStatus(FileBanStatusDTO fileBanStatusDTO);
+
+    /**
+     * 更新文件引用次数
+     *
+     * @param fileId
+     * @param referenceCount
+     */
+    void updateReferenceCount(Integer fileId, Integer referenceCount);
 }

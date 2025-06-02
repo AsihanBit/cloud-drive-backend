@@ -2,6 +2,7 @@ package com.netdisk.cloudserver.service;
 
 import com.netdisk.dto.CreateFolderDTO;
 import com.netdisk.dto.UserFileStatusDTO;
+import com.netdisk.entity.File;
 import com.netdisk.entity.UserFiles;
 import com.netdisk.vo.UserItemsVO;
 
@@ -66,4 +67,14 @@ public interface UserFilesService {
      * @param itemId
      */
     void adminDeleteUserFileByItemId(Integer itemId);
+
+    /**
+     * 更新用户已用空间
+     *
+     * @param userId
+     * @param fileSizeChange
+     */
+    void updateUsedSpace(Integer userId, Long fileSizeChange);
+
+
 }

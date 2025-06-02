@@ -5,7 +5,7 @@
 <mapper namespace="com.netdisk.cloudserver.mapper.UserFilesMapper">
 
     <!-- 根据父条目查看子条目列表 -->
-    <select id="selectUserItemsByItemPId" resultType="com.netdisk.entity.UserFiles">
+    <select id="selectUserItemsByItemPIdWithUserId" resultType="com.netdisk.entity.UserFiles">
         select *
         from user_files
         where p_id = #{itemPId}
@@ -13,7 +13,7 @@
     </select>
 
     <!-- 根据 item_id 检查用户条目 -->
-    <select id="selectUserItemByItemId" resultType="com.netdisk.entity.UserFiles">
+    <select id="selectUserItemByItemIdWithUserId" resultType="com.netdisk.entity.UserFiles">
         select *
         from user_files
         where item_id = #{itemId}
@@ -21,7 +21,7 @@
     </select>
 
     <!-- 根据item_id删除条目 -->
-    <delete id="deleteUserItemByItemId">
+    <delete id="deleteUserItemByItemIdWithUserId">
         delete
         from user_files
         where item_id = #{itemId}
@@ -87,4 +87,26 @@
         from user_files
         where item_id = #{itemId}
     </delete>
+
+    <!-- item_id 查询用户条目 -->
+    <select id="selectUserItemByItemId" resultType="com.netdisk.entity.UserFiles">
+        select *
+        from user_files
+        where item_id = #{itemId}
+    </select>
+
+    <!-- item_id 删除条目 -->
+    <delete id="deleteUserItemByItemId">
+        delete
+        from user_files
+        where item_id = #{itemId}
+    </delete>
+
+    <!-- 根据 itemId 查询条目下的条目 -->
+    <select id="selectUserItemsByItemPId" resultType="com.netdisk.entity.UserFiles">
+        select *
+        from user_files
+        where p_id = #{itemPId}
+    </select>
+
 </mapper>

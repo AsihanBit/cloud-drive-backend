@@ -16,9 +16,7 @@
 
 <img src="./assets/readme/architecture.png" width="80%" />
 
-ElasticSearch 文件搜索：实现关键字高亮 (match highlight)。
 
-kkFileView 在线浏览：
 
 
 

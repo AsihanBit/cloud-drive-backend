@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserSharedDTO {
+public class SharedDTO {
     private Integer shareId;
     private String shareCode;
     private Integer userId;
@@ -20,5 +20,6 @@ public class UserSharedDTO {
     private Integer accessCount;
     private Integer accessLimit;
     private Short shareStatus;
+    private Short banStatus;
     private LocalDateTime createTime;
 }

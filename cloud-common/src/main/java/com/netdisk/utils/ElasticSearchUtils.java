@@ -88,7 +88,28 @@ public class ElasticSearchUtils {
             return true;
         } catch (IOException e) {
             log.error("ElasticSearch批量新增文档失败", e);
-            throw new RuntimeException("批量插入文档失败", e);
+//            throw new RuntimeException("批量插入文档失败", e);
+        }
+        return false;
+    }
+
+    /**
+     * 根据itemId删除条目
+     *
+     * @param itemId 要删除的条目ID
+     * @return 是否删除成功
+     */
+    public boolean deleteItemByItemId(Integer itemId) {
+        try {
+            // 删除父条目
+            DeleteRequest deleteRequest = new DeleteRequest("user_files", itemId.toString());
+            DeleteResponse deleteResponse = esClient.delete(deleteRequest, RequestOptions.DEFAULT);
+
+            log.info("成功删除条目ID: {}", itemId);
+            return true;
+        } catch (IOException e) {
+            log.error("删除条目失败，ID: {}", itemId, e);
+            throw new RuntimeException("删除条目失败", e);
         }
     }
 

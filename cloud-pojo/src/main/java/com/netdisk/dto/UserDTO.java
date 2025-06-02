@@ -1,10 +1,12 @@
 package com.netdisk.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 public class UserDTO {
     private Integer userId;
     private String username;

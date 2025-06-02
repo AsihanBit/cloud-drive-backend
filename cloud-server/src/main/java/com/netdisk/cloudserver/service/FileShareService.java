@@ -22,7 +22,7 @@ public interface FileShareService {
      *
      * @return
      */
-    List<UserSharedDTO> getUserOwnSharedList();
+    List<SharedDTO> getUserOwnSharedList();
 
     /**
      * 批量删除选中的分享
@@ -125,4 +125,12 @@ public interface FileShareService {
      * @param shareBanStatusDTO
      */
     void updateShareBanStatus(ShareBanStatusDTO shareBanStatusDTO);
+
+    /**
+     * 生成分享链接
+     *
+     * @param shareId
+     * @return
+     */
+    ShareResultDTO getShareLink(Integer shareId);
 }

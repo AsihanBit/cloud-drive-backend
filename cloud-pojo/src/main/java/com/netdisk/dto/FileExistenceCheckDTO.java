@@ -14,6 +14,8 @@ public class FileExistenceCheckDTO {
     private String fileHash;
     // 文件的名称
     private String fileName;
+    // 文件大小
+    private Long fileSize;
     // 目标路径的 ID，用于指定文件存储的路径
     private Integer targetPathId;
 

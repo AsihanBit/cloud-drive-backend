@@ -1,5 +1,6 @@
 package com.netdisk.cloudserver.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netdisk.cloudserver.service.CheckFilesExist;
 import com.netdisk.cloudserver.service.FileDownloadService;
 import com.netdisk.constant.MessageConstant;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user/file")
@@ -191,31 +194,51 @@ public class FileDownloadController {
                               HttpServletResponse response) throws Exception {
         log.info("下载文件id: {}", fileId);
         // 1 检查file中是否存在
+        // 1 检查file中是否存在
         com.netdisk.entity.File file = checkFilesExist.checkFileExistByFileId(fileId);
         if (file == null) {
-            // 待做 自定义异常
-            response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
+            // 文件不存在，返回404错误
+            sendErrorResponse(response, HttpStatus.NOT_FOUND, MessageConstant.FILE_NOT_FOUND);
+//            throw new BaseException(MessageConstant.FILE_NOT_FOUND);
             return;
-//            return Result.error("文件不存在");
         }
-        if (file.getBanStatus().equals(StatusConstant.ITEM_STATUS_LOCKED)) {
-            throw new BaseException(MessageConstant.FILE_STATUS_LOCKED);
 
+        // 2 检查文件是否被封禁
+        if (file.getBanStatus().equals(StatusConstant.ITEM_STATUS_LOCKED)) {
+            // 文件被封禁，返回403错误
+            sendErrorResponse(response, HttpStatus.FORBIDDEN, MessageConstant.FILE_STATUS_LOCKED);
+            return;
+//            throw new BaseException(MessageConstant.FILE_STATUS_LOCKED);
         }
-        // 2 检查用户是否拥有此文件
+
+        // 3 检查用户是否拥有此文件
         UserFiles userFile = checkFilesExist.checkUserFileExistByItemIdFileId(itemId, fileId);
         if (userFile == null) {
-            // 待做 自定义异常
-            response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
+            // 用户无权限，返回403错误
+            sendErrorResponse(response, HttpStatus.FORBIDDEN, "用户对文件没权限");
+//            response.sendError(HttpStatus.NOT_FOUND.value(), "File not found");
             return;
-//            return Result.error("用户对文件没权限");
         }
-        // 3 保存文件: 待做:根据用户的扩展名返回(其实前端已完成)
+        // 4 如果所有检查都通过，下载保存文件: 待做:根据用户的扩展名返回(其实前端已完成)
         fileDownloadService.downLoadChunk(request, response, file);
+    }
 
+    /**
+     * 发送错误响应
+     */
+    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+        response.reset();
+        response.setStatus(status.value());
+        response.setContentType("application/json;charset=UTF-8");
 
-        return;
-//        return Result.success();
+        // 创建错误响应JSON
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("code", status.value());
+        errorResponse.put("msg", message);
+        errorResponse.put("success", false);
+
+        // 将错误信息写入响应
+        response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
     }
 
 
