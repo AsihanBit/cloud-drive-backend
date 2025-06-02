@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class UserInfoVO {
     private Integer userId;
     private String username;
-    private String password;
+    private String password; // TODO 待处理敏感字段 包括数据库中也需加密
     private String nickname;
     private Short age;
     private Short gender;

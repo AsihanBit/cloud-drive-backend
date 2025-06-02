@@ -9,10 +9,7 @@ import com.netdisk.cloudserver.service.UserService;
 import com.netdisk.constant.MessageConstant;
 import com.netdisk.constant.StatusConstant;
 import com.netdisk.context.BaseContext;
-import com.netdisk.dto.UserAccountStatusDTO;
-import com.netdisk.dto.UserDTO;
-import com.netdisk.dto.UserLoginDTO;
-import com.netdisk.dto.UserRegisterDTO;
+import com.netdisk.dto.*;
 import com.netdisk.entity.File;
 import com.netdisk.entity.User;
 import com.netdisk.entity.UserFiles;
@@ -235,6 +232,32 @@ public class UserServiceImpl implements UserService {
         if (user.getUsedSpace() + fileSize > user.getTotalSpace()) {
             return false;
         }
+        return true;
+    }
+
+    /**
+     * 修改密码接口
+     *
+     * @param changePwdDTO
+     * @return
+     */
+    @Override
+    public boolean modifyPassword(ChangePwdDTO changePwdDTO) {
+        Integer userId = BaseContext.getCurrentId();
+        if (!changePwdDTO.getNewPassword().equals(changePwdDTO.getConfirmPassword())) {
+            throw new BaseException("两次输入新密码不一致");
+        }
+        User user = userMapper.selectUserByUserId(userId);
+        if (!user.getPassword().equals(changePwdDTO.getOldPassword())) {
+            throw new BaseException("账户原密码错误");
+        }
+        // 修改密码
+        UserDTO userDTO = UserDTO.builder()
+                .password(changePwdDTO.getNewPassword())
+                .userId(userId)
+                .build();
+        userMapper.updateUser(userDTO);
+
         return true;
     }
 

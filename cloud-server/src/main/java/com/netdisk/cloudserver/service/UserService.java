@@ -1,10 +1,7 @@
 package com.netdisk.cloudserver.service;
 
 import cn.hutool.system.UserInfo;
-import com.netdisk.dto.UserAccountStatusDTO;
-import com.netdisk.dto.UserDTO;
-import com.netdisk.dto.UserLoginDTO;
-import com.netdisk.dto.UserRegisterDTO;
+import com.netdisk.dto.*;
 import com.netdisk.entity.File;
 import com.netdisk.entity.User;
 import com.netdisk.vo.UserInfoVO;
@@ -76,4 +73,12 @@ public interface UserService {
      * @return
      */
     boolean checkSpaceEnough(Long fileSize);
+
+    /**
+     * 修改密码接口
+     *
+     * @param changePwdDTO
+     * @return
+     */
+    boolean modifyPassword(ChangePwdDTO changePwdDTO);
 }

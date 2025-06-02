@@ -73,18 +73,6 @@ public class UserLoginController {
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .token(userToken)
-                .nickname(user.getNickname() != null ? user.getNickname() : user.getUsername())
-                .age(user.getAge() != null ? user.getAge() : 0)
-                .gender(user.getGender() != null ? user.getGender() : 3)
-                .phone(user.getPhone() != null ? user.getPhone() : "")
-                .email(user.getEmail() != null ? user.getEmail() : "")
-                .vip(user.getVip() != null ? user.getVip() : 0)
-                .avatar(user.getAvatar() != null ? user.getAvatar() : "")
-                .usedSpace(user.getUsedSpace())
-                .totalSpace(user.getTotalSpace())
-                .registerTime(user.getRegisterTime())
-                .lastLoginTime(user.getLastLoginTime())
-                .status(user.getStatus())
                 .build();
 
         return Result.success(userLoginVO);

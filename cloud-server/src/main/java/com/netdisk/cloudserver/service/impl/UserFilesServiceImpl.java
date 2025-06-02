@@ -214,7 +214,12 @@ public class UserFilesServiceImpl implements UserFilesService {
         userFilesMapper.insertNewItem(userNewFolder);
 
         // 保存至 ElasticSearch
-        boolean isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFolder);
+        boolean isSuccess;
+        try {
+            isSuccess = elasticSearchUtils.insertUserFilesDoc(userNewFolder);
+        } catch (Exception e) {
+            log.error("ElasticSearch 保存失败（不影响主流程）: {}", e.getMessage());
+        }
     }
 
     /**
