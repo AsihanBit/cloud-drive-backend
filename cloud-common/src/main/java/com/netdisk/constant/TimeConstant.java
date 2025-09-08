@@ -30,7 +30,7 @@ public class TimeConstant {
     /**
      * 令牌申请速率限制的时间窗口大小 (毫秒)
      */
-    public static final long TOKEN_RATE_LIMIT_MILLIS = 10_000;
+    public static final long TOKEN_RATE_LIMIT_MILLIS = 15_000;
 
     /**
      * 时间窗口内允许的最大令牌数

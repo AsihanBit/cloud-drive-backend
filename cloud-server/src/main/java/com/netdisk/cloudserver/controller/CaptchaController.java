@@ -78,12 +78,16 @@ public class CaptchaController {
             int i = ThreadLocalRandom.current().nextInt(0, 4);
             if (i == 0) {
                 type = CaptchaTypeConstant.SLIDER;
+                log.info("验证码 SLIDER");
             } else if (i == 1) {
                 type = CaptchaTypeConstant.CONCAT;
+                log.info("验证码 CONCAT");
             } else if (i == 2) {
                 type = CaptchaTypeConstant.ROTATE;
+                log.info("验证码 ROTATE");
             } else {
                 type = CaptchaTypeConstant.WORD_IMAGE_CLICK;
+                log.info("验证码 WORD_IMAGE_CLICK");
             }
 
         }

@@ -144,27 +144,20 @@ class CloudServerApplicationTests {
         int shareId = 246810;
         log.info("分享id: {}", shareId);
 
-        String shareStr = CipherUtils.encryptCBC(shareId);
-        log.info("分享id-加密后: {}", shareStr);
+        String shareStr1 = CipherUtils.encryptECB(shareId);
+        String shareStr2 = CipherUtils.encryptECB(shareId);
+        String shareStr3 = CipherUtils.encryptECB(shareId);
 
-        int decryptShareId = CipherUtils.decryptCBC(shareStr);
-        log.info("分享id-解密后: {}", decryptShareId);
+        log.info("ECB加密 次数1: {} , 解密后: {}", shareStr1, CipherUtils.decryptECB(shareStr1));
+        log.info("ECB加密 次数2: {} , 解密后: {}", shareStr2, CipherUtils.decryptECB(shareStr2));
+        log.info("ECB加密 次数3: {} , 解密后: {}", shareStr3, CipherUtils.decryptECB(shareStr3));
 
-
-        String shareStrCBC = CipherUtils.encryptCBC(shareId);
-        log.info("分享id-CBC加密后: {}", shareStrCBC);
-        String shareStrCBC1 = CipherUtils.encryptCBC(shareId);
-        log.info("分享id-CBC加密后1: {}", shareStrCBC1);
-        String shareStrCBC2 = CipherUtils.encryptCBC(shareId);
-        log.info("分享id-CBC加密后1: {}", shareStrCBC2);
-
-        int decryptShareIdCBC = CipherUtils.decryptCBC(shareStrCBC);
-        log.info("分享id-解密后: {}", decryptShareIdCBC);
-        int decryptShareIdCBC1 = CipherUtils.decryptCBC(shareStrCBC1);
-        log.info("分享id-解密后1: {}", decryptShareIdCBC1);
-        int decryptShareIdCBC2 = CipherUtils.decryptCBC(shareStrCBC2);
-        log.info("分享id-解密后2: {}", decryptShareIdCBC2);
-
+        String encryptCBC1 = CipherUtils.encryptCBC(shareId);
+        String encryptCBC2 = CipherUtils.encryptCBC(shareId);
+        String encryptCBC3 = CipherUtils.encryptCBC(shareId);
+        log.info("CBC加密 次数1: {} , 解密后: {}", encryptCBC1, CipherUtils.decryptCBC(encryptCBC1));
+        log.info("CBC加密 次数2: {} , 解密后: {}", encryptCBC2, CipherUtils.decryptCBC(encryptCBC2));
+        log.info("CBC加密 次数3: {} , 解密后: {}", encryptCBC3, CipherUtils.decryptCBC(encryptCBC3));
 
     }
 
@@ -192,5 +185,13 @@ class CloudServerApplicationTests {
     @Test
     public void initialUserFiles() {
 //        userInitializer.insertDefaultFiles(14);
+    }
+
+
+    @Test
+    public void testLeet() {
+        int a = Integer.MAX_VALUE;
+
+    
     }
 }

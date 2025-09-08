@@ -18,7 +18,7 @@ spring:
   application:
     name: cloud-server
   profiles:
-    # 本地: local 开发: dev
+    # 本地: local 开发: prod
     active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -96,6 +96,9 @@ captcha:
   init-default-resource: true
   local-cache-enabled: true
   local-cache-size: 20
+  # 配置字体包，供文字点选验证码使用,可以配置多个，不配置使用默认的字体
+  font-path:
+    - classpath:font/HYSongYunLangHeiW.ttf
 cors:
   controlAllowHeaders: "*"
   controlAllowMethods: "*"

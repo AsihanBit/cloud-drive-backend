@@ -140,6 +140,15 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <!-- 包含所有资源文件 -->
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
     </build>
 
     <!-- 没作用 -->

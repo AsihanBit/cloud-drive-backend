@@ -40,10 +40,10 @@
     <insert id="insertNewItem" useGeneratedKeys="true" keyProperty="itemId">
         insert into user_files (user_id, item_name, item_type, p_id, directory_level,
         file_id, file_size, file_cover, file_extension,
-        upload_time, update_time, recycle_status)
+        upload_time, update_time, recycle_status, ban_status)
         VALUES (#{userId}, #{itemName}, #{itemType}, #{pId}, #{directoryLevel},
         #{fileId}, #{fileSize}, #{fileCover}, #{fileExtension},
-        #{upLoadTime}, #{updateTime}, #{recycleStatus})
+        #{upLoadTime}, #{updateTime}, #{recycleStatus}, #{banStatus})
     </insert>
 
 
@@ -58,13 +58,13 @@
         insert into user_files (
         user_id, item_name, item_type, p_id, directory_level,
         file_id, file_size, file_cover, file_extension,
-        upload_time, update_time, recycle_status
+        upload_time, update_time, recycle_status, ban_status
         ) values
         <foreach collection="itemList" item="item" separator=",">
             (
             #{item.userId}, #{item.itemName}, #{item.itemType}, #{item.pId}, #{item.directoryLevel},
             #{item.fileId}, #{item.fileSize}, #{item.fileCover}, #{item.fileExtension},
-            #{item.upLoadTime}, #{item.updateTime}, #{item.recycleStatus}
+            #{item.upLoadTime}, #{item.updateTime}, #{item.recycleStatus}, #{item.banStatus}
             )
         </foreach>
     </insert>
